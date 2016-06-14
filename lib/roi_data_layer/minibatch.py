@@ -140,6 +140,9 @@ def _get_image_blob(roidb, scale_inds):
         target_size = cfg.TRAIN.SCALES[scale_inds[i]]
         im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,
                                         cfg.TRAIN.MAX_SIZE)
+        #if roidb[i]['jittered']:
+        #    for j in xrange(3):
+        #        im[:,:,j] = im[:,:,j] * np.random.uniform(0.9,1.1);
         im_scales.append(im_scale)
         processed_ims.append(im)
 

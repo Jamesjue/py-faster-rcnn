@@ -39,31 +39,30 @@ NETS = {'vgg16': ('VGG16',
         'zf': ('ZF',
                   'ZF_faster_rcnn_final.caffemodel')}
 
-
 def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
+    if len(inds) == 0:
+        print 'nothing detected'
+        return
+
     im = im[:, :, (2, 1, 0)]
     fig, ax = plt.subplots(figsize=(12, 12))
     ax.imshow(im, aspect='equal')
-    
-    if len(inds) == 0:
-        print 'nothing detected'
-    else:
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-            print 'detected roi:{} score:{}'.format(bbox, score)
-            ax.add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                              bbox[2] - bbox[0],
-                              bbox[3] - bbox[1], fill=False,
-                              edgecolor='red', linewidth=3.5)
-                )
-            ax.text(bbox[0], bbox[1] - 2,
-                    '{:s} {:.3f}'.format(class_name, score),
-                    bbox=dict(facecolor='blue', alpha=0.5),
-                    fontsize=14, color='white')
+    for i in inds:
+        bbox = dets[i, :4]
+        score = dets[i, -1]
+        print 'detected roi:{} score:{}'.format(bbox, score)
+        ax.add_patch(
+            plt.Rectangle((bbox[0], bbox[1]),
+                          bbox[2] - bbox[0],
+                          bbox[3] - bbox[1], fill=False,
+                          edgecolor='red', linewidth=3.5)
+            )
+        ax.text(bbox[0], bbox[1] - 2,
+                '{:s} {:.3f}'.format(class_name, score),
+                bbox=dict(facecolor='blue', alpha=0.5),
+                fontsize=14, color='white')
 
     ax.set_title(('{} detections with '
                   'p({} | box) >= {:.1f}').format(class_name, class_name,
@@ -100,13 +99,14 @@ def demo(net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        print dets
+        #print dets
         vis_detections(im, cls, dets, thresh=CONF_THRESH)
+    return dets
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-    parser.add_argument('im', help="Input image", default= '000456.jpg')
+    parser = argparse.ArgumentParser(description='Faster R-CNN get bounding boxes')
+    parser.add_argument('im_list', help="Input image list", default= 'imglist.txt')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
                         default=0, type=int)
     parser.add_argument('--cpu', dest='cpu_mode',
@@ -114,7 +114,7 @@ def parse_args():
                         action='store_true')
     parser.add_argument('--prototxt', dest='prototxt', help='Prototxt of Network')
     parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
-    parser.add_argument('--output', dest='destination', help='Output location of image detections')
+    parser.add_argument('--output_folder', dest='destination', help='Output location of image detections')
     args = parser.parse_args()
 
     return args
@@ -148,7 +148,17 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    demo(net, args.im)
+    imlistfile = args.im_list
+    with open(imlistfile) as f:
+        ims = [x.strip().split()[1] for x in f.readlines()]
+    for i, im in enumerate(ims):
+        dets = demo(net, im)
+        with open(os.path.join(args.destination, '%s.txt'%(i+1)),'w') as f:
+            for det in dets:
+                for s in det:
+                    f.write("%s "%s)
+                f.write("\n")
+        plt.savefig(os.path.join(args.destination, '%s.jpg'%(i+1)))
     #im_names = args.im#['000456.jpg', '000542.jpg', '001150.jpg',
                 #'001763.jpg', '004545.jpg']
     #for im_name in im_names:
@@ -157,4 +167,4 @@ if __name__ == '__main__':
     #    demo(net, im_name)
 
     #plt.show()
-    plt.savefig(args.destination)
+    #plt.savefig(args.destination)

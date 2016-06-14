@@ -26,6 +26,13 @@ import multiprocessing as mp
 import cPickle
 import shutil
 
+def create_dir(dir_name):
+    if '~' in dir_name:
+        directory = os.path.expanduser(dir_name)
+    if not os.path.exists(dir_name):
+        print 'create dir: ' + dir_name
+        os.makedirs(dir_name)
+
 def parse_args():
     """
     Parse input arguments
@@ -49,7 +56,7 @@ def parse_args():
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
-
+    parser.add_argument('--final', dest='final_path', help='set config keys', default=None)
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -77,8 +84,9 @@ def get_solvers(net_name):
                [net_name, n, 'stage2_fast_rcnn_solver30k40k.pt']]
     solvers = [os.path.join(cfg.MODELS_DIR, *s) for s in solvers]
     # Iterations for each training stage
-    max_iters = [80000, 40000, 80000, 40000]
-    # max_iters = [100, 100, 100, 100]
+    # max_iters = [80000, 40000, 80000, 40000]
+    #max_iters = [10, 10, 10, 10]
+    max_iters = [10000, 5000, 5000, 2500]
     # Test prototxt for the RPN
     rpn_test_prototxt = os.path.join(
         cfg.MODELS_DIR, net_name, n, 'rpn_test.pt')
@@ -325,10 +333,11 @@ if __name__ == '__main__':
     p.join()
 
     # Create final model (just a copy of the last stage)
-    final_path = os.path.join(
-            os.path.dirname(fast_rcnn_stage2_out['model_path']),
-            args.net_name + '_faster_rcnn_final.caffemodel')
+    final_path = args.final_path
     print 'cp {} -> {}'.format(
             fast_rcnn_stage2_out['model_path'], final_path)
-    shutil.copy(fast_rcnn_stage2_out['model_path'], final_path)
+
+    pathname, filename = os.path.split(final_path)
+    create_dir(pathname)
+    shutil.copyfile(fast_rcnn_stage2_out['model_path'], final_path)
     print 'Final model: {}'.format(final_path)

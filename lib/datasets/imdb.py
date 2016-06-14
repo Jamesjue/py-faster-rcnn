@@ -106,8 +106,18 @@ class imdb(object):
             boxes = self.roidb[i]['boxes'].copy()
             oldx1 = boxes[:, 0].copy()
             oldx2 = boxes[:, 2].copy()
-            boxes[:, 0] = widths[i] - oldx2 - 1
-            boxes[:, 2] = widths[i] - oldx1 - 1
+            # j: add check to make sure the flipped bounding box stays in the frame
+            boxes[:, 0] = widths[i] - oldx2 -1 
+            boxes[:, 2] = widths[i] - oldx1 -1
+
+            negative_value_indices= np.array(widths[i]) < np.array(oldx2)+1
+            boxes[negative_value_indices, 0] = 0
+            print 'negative val indices for boxes[:,0]: {}'.format(negative_value_indices)
+            negative_value_indices=  np.array(widths[i]) < np.array(oldx1)+1
+            boxes[negative_value_indices, 2] = 0
+            print 'negative val indices for boxes[:,2]: {}'.format(negative_value_indices)
+            
+            print self.image_path_at(i), boxes[:,2], boxes[:,0], oldx1, oldx2, widths[i]
             assert (boxes[:, 2] >= boxes[:, 0]).all()
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],

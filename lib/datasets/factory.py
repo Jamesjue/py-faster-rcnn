@@ -11,6 +11,7 @@ __sets = {}
 
 from datasets.pascal_voc import pascal_voc
 from datasets.coco import coco
+from datasets.web_demo import web_demo
 import numpy as np
 
 # Set up voc_<year>_<split> using selective search "fast" mode
@@ -30,6 +31,11 @@ for year in ['2015']:
     for split in ['test', 'test-dev']:
         name = 'coco_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year: coco(split, year))
+
+web_demo_path = '/home/junjuew/object-detection-web/demo-web/rcnn_input'
+for split in ['train', 'test']:
+    name = '{}_{}'.format('web_demo', split)
+    __sets[name] = (lambda split=split: web_demo(split, web_demo_path))
 
 def get_imdb(name):
     """Get an imdb (image database) by name."""
