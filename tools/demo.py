@@ -12,19 +12,22 @@ Demo script showing detections in sample images.
 
 See README.md for installation instructions before running.
 """
-
-import matplotlib as mpl
-mpl.use('Agg')
+try:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    mpl.use('Agg')
+except ImportError:
+    print 'no matplotlib. output bounding box in text only'
 import _init_paths
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
+import sys
 
 CLASSES = ('__background__',
            'object')
@@ -101,7 +104,8 @@ def demo(net, image_name):
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
         print dets
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+        if 'matplotlib' in sys.modules:
+            vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
 def parse_args():
     """Parse input arguments."""
