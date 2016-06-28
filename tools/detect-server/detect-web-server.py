@@ -12,6 +12,15 @@ REST Web server for object detection using py-faster-rcnn
 
 See README.md for installation instructions before running.
 """
+import os.path as osp
+import sys
+
+def add_path(path):
+    if path not in sys.path:
+        sys.path.insert(0, path)
+this_dir = osp.dirname(__file__)
+add_path(osp.join(this_dir, '..'))
+
 import _init_paths
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
