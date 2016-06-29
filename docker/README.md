@@ -1,4 +1,4 @@
-## verview
+## Overview
 This directory contains necessary files to construct a detect container using py-faster-rcnn.
 The container listens on port 8080 that accept POST and GET method.
 POST method receives an image, run object detection, and eventually returns a query id.
