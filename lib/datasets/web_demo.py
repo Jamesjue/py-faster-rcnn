@@ -25,8 +25,18 @@ class web_demo(imdb):
         self._image_set = image_set
         self._devkit_path = devkit_path
         self._data_path = ''#os.path.join(self._devkit_path, 'data')
-        self._classes = ('__background__', # always index 0
-                         'object')
+        
+        #j: read label from devkit_path
+        self._label_path = os.path.join(self._devkit_path, 'labels.txt')
+        labels=[]
+        with open(self._label_path, 'r') as f:
+            labels=f.read().splitlines()
+        labels.insert(0, '__background__')
+        print 'custom labels: {}'.format(labels)
+        self._classes = (labels)        
+#        self._classes = ('__background__', # always index 0
+#                         'object')
+
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
@@ -191,6 +201,7 @@ class web_demo(imdb):
         seg_areas = np.zeros((num_objs), dtype=np.float32)
 
         # Load object bounding boxes into a data frame.
+        # sample entry: 319 61 275 159 apple
         for ix, obj in enumerate(objs):
             # Make pixel indexes 0-based
             coor = re.findall('\d+', obj)
@@ -201,7 +212,8 @@ class web_demo(imdb):
             h = float(coor[3])
             x2 = x1 + w
             y2 = y1 + h
-            cls = self._class_to_ind['object']
+            # j: class is the last word in an entry separated by white space
+            cls = self._class_to_ind[str(obj.split(' ')[-1])]
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0
