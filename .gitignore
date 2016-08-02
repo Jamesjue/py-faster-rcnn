@@ -6,3 +6,5 @@ lib/pycocotools/_mask.so
 *.caffemodel
 *.pkl
 *.tgz
+models/web_demo/*/*/*.pt
+models/web_demo/*/*/*.prototxt
