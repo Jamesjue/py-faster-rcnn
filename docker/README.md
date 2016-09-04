@@ -16,5 +16,8 @@ GET method is used to get the result using query id received.
          nvidia-docker run -it -p <host-port>:8080 --name <container-name> <image-name>
 
 4. Send HTTP POST request to http://localhost:<host-port>/ to upload image and get <query-id>
-5. Send HTTP Get request to http://localhost:<host-port>/<query-id> to get object detection result
 
+for example, use httpie:
+    http --form post cloudlet001.elijah.cs.cmu.edu:57632/0 picture@Apple_iMac_Keyboard_A1242.jpeg
+
+5. Send HTTP Get request to http://localhost:<host-port>/<query-id> to get object detection result

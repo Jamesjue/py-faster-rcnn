@@ -20,10 +20,9 @@ RUN apt-get update && apt-get install -y \
     libgoogle-glog-dev \
     liblmdb-dev \
     libopenblas-base \
-    libopenblas-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    libopenblas-dev
+
+RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-dev
 
 RUN pip install cython easydict
 
@@ -63,4 +62,4 @@ ADD model.caffemodel /py-faster-rcnn/models/web_demo/VGG_CNN_M_1024/faster_rcnn_
 # run twistd wsgi to server python application
 WORKDIR /py-faster-rcnn
 EXPOSE 8080
-CMD ["/bin/bash", "-c", "source /etc/profile.d/openblas.sh && cd tools/detect-server/ && twistd -n web --port 8080 --wsgi detect-web-server.app"]
+CMD ["/bin/bash", "-c", "cd tools/detect-server/ && twistd -n web --port 8080 --wsgi detect-web-server.app"]
