@@ -19,16 +19,13 @@ RUN apt-get update && apt-get install -y \
     libgflags-dev \
     libgoogle-glog-dev \
     liblmdb-dev \
+    libopenblas-base \
+    libopenblas-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN pip install cython easydict
-
-# install openblas
-WORKDIR /tmp
-ADD install-openblas.sh install-openblas.sh
-RUN bash install-openblas.sh
 
 # install py-faster-rcnn
 WORKDIR /
