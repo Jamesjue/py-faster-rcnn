@@ -59,10 +59,10 @@ querys={}
 class Query(Resource):
     def get(self, query_id):
         if query_id in querys:
-            return {query_id: querys[query_id]}
+            return querys[query_id]
         else:
-            abort(404, message="Query {} doesn't exist".format(query_id))            
-
+            abort(404, message="Query {} doesn't exist".format(query_id))
+    
     def post(self, query_id):
         args = parser.parse_args()
         img = args['picture']
@@ -80,7 +80,7 @@ class Query(Resource):
                 print 'not allowed:{} '.format(img.filename)
         detect_result=detect(bgr_img)
         querys[query_id]=detect_result
-        return query_id, 201
+        return detect_result, 201
 
 api.add_resource(Query, '/<string:query_id>')
     
