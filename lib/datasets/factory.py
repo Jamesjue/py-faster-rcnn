@@ -11,7 +11,7 @@ __sets = {}
 
 from datasets.pascal_voc import pascal_voc
 from datasets.coco import coco
-from datasets.web_demo import web_demo
+from datasets.tpod import tpod
 import numpy as np
 
 # Set up voc_<year>_<split> using selective search "fast" mode
@@ -32,16 +32,16 @@ for year in ['2015']:
         name = 'coco_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year: coco(split, year))
 
-web_demo_path = '/home/junjuew/object-detection-web/demo-web/rcnn_input'
-for split in ['train', 'test']:
-    name = '{}_{}'.format('web_demo', split)
-    __sets[name] = (lambda split=split: web_demo(split, web_demo_path))
+__sets[tpod.TPOD_IMDB_NAME] = (lambda image_set, devkit_path: tpod(image_set, devkit_path))        
 
-def get_imdb(name):
+def get_imdb(name, image_set=None, devkit_path=None):
     """Get an imdb (image database) by name."""
     if not __sets.has_key(name):
         raise KeyError('Unknown dataset: {}'.format(name))
-    return __sets[name]()
+    if name == tpod.TPOD_IMDB_NAME:
+        return tpod(image_set, devkit_path)
+    else:
+        return __sets[name]()        
 
 def list_imdbs():
     """List all registered imdbs."""
