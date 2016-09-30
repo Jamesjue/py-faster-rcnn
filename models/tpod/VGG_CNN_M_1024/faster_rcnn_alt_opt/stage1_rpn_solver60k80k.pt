@@ -1,9 +1,9 @@
-train_net: "models/web_demo/VGG_CNN_M_1024/faster_rcnn_alt_opt/stage1_fast_rcnn_train.pt"
+train_net: "/home/junjuew/object-detection-web/demo-web/train/1_test/prototxt/stage1_rpn_train.pt"
 
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
-stepsize: 1800
+stepsize: 3000
 display: 20
 average_loss: 100
 momentum: 0.9
@@ -13,4 +13,4 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "vgg_cnn_m_1024_fast_rcnn"
+snapshot_prefix: "vgg_cnn_m_1024_rpn"

@@ -46,8 +46,11 @@ def parse_args():
     parser.add_argument('--gpu', dest='gpu_id',
                         help='GPU device id to use [0]',
                         default=0, type=int)
-    parser.add_argument('--net_name', dest='net_name',
-                        help='network name (e.g., "ZF")',
+    parser.add_argument('--image_set', dest='image_set',
+                        help='a file in which each line is a file path',
+                        default=None, type=str)
+    parser.add_argument('--devkit_path', dest='devkit_path',
+                        help='devkit path',
                         default=None, type=str)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
@@ -55,9 +58,6 @@ def parse_args():
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
                         default=None, type=str)
-    parser.add_argument('--imdb', dest='imdb_name',
-                        help='dataset to train on',
-                        default='voc_2007_trainval', type=str)
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
@@ -69,8 +69,11 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def get_roidb(imdb_name, rpn_file=None):
-    imdb = get_imdb(imdb_name)
+def get_roidb(imdb_name,
+              image_set=None,
+              devkit_path=None,
+              rpn_file=None):
+    imdb = get_imdb(imdb_name, image_set, devkit_path)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
     imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
     print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
@@ -79,24 +82,35 @@ def get_roidb(imdb_name, rpn_file=None):
     roidb = get_training_roidb(imdb)
     return roidb, imdb
 
-def get_solvers(net_name):
+def get_solvers(devkit_path):
     # Faster R-CNN Alternating Optimization
-    n = 'faster_rcnn_alt_opt'
+    # n = 'faster_rcnn_alt_opt'  
     # Solver for each training stage
-    solvers = [[net_name, n, 'stage1_rpn_solver60k80k.pt'],
-               [net_name, n, 'stage1_fast_rcnn_solver30k40k.pt'],
-               [net_name, n, 'stage2_rpn_solver60k80k.pt'],
-               [net_name, n, 'stage2_fast_rcnn_solver30k40k.pt']]
-    solvers = [os.path.join(cfg.MODELS_DIR, *s) for s in solvers]
+    # solvers = [[devkit_path, n, 'stage1_rpn_solver60k80k.pt'],
+    #            [devkit_path, n, 'stage1_fast_rcnn_solver30k40k.pt'],
+    #            [devkit_path, n, 'stage2_rpn_solver60k80k.pt'],
+    #            [devkit_path, n, 'stage2_fast_rcnn_solver30k40k.pt']]
+    # solvers = [os.path.join(cfg.MODELS_DIR, *s) for s in solvers]
+    n = 'prototxt'
+    solvers=[
+        [devkit_path, n, 'stage1_rpn_solver60k80k.pt'],               
+        [devkit_path, n, 'stage1_fast_rcnn_solver30k40k.pt'], 
+        [devkit_path, n, 'stage2_rpn_solver60k80k.pt'],
+        [devkit_path, n, 'stage2_fast_rcnn_solver30k40k.pt']
+    ]
+    solvers = [os.path.join(*s) for s in solvers]
+    
     # Iterations for each training stage
     # max_iters = [80000, 40000, 80000, 40000]
     max_iters = [10, 10, 10, 10]
     # max_iters = [10000, 5000, 5000, 2500]
     # Test prototxt for the RPN
-    rpn_test_prototxt = os.path.join(
-        cfg.MODELS_DIR, net_name, n, 'rpn_test.pt')
+    # rpn_test_prototxt = os.path.join(
+    #     cfg.MODELS_DIR, devkit_path, n, 'rpn_test.pt')
+    rpn_test_prototxt = os.path.join(devkit_path, n,  'rpn_test.pt')
+    
     return solvers, max_iters, rpn_test_prototxt
-
+    
 # ------------------------------------------------------------------------------
 # Pycaffe doesn't reliably free GPU memory when instantiated nets are discarded
 # (e.g. "del net" in Python code). To work around this issue, each training
@@ -115,8 +129,14 @@ def _init_caffe(cfg):
     caffe.set_mode_gpu()
     caffe.set_device(cfg.GPU_ID)
 
-def train_rpn(queue=None, imdb_name=None, init_model=None, solver=None,
-              max_iters=None, cfg=None):
+def train_rpn(queue=None,
+              imdb_name=None,
+              image_set=None,
+              devkit_path=None,
+              init_model=None,
+              solver=None,
+              max_iters=None,
+              cfg=None):
     """Train a Region Proposal Network in a separate training process.
     """
 
@@ -132,7 +152,9 @@ def train_rpn(queue=None, imdb_name=None, init_model=None, solver=None,
     import caffe
     _init_caffe(cfg)
 
-    roidb, imdb = get_roidb(imdb_name)
+    roidb, imdb = get_roidb(imdb_name,
+                            image_set=image_set,
+                            devkit_path=devkit_path)
     print 'roidb len: {}'.format(len(roidb))
     output_dir = get_output_dir(imdb)
     print 'Output will be saved to `{:s}`'.format(output_dir)
@@ -147,7 +169,12 @@ def train_rpn(queue=None, imdb_name=None, init_model=None, solver=None,
     # Send final model path through the multiprocessing queue
     queue.put({'model_path': rpn_model_path})
 
-def rpn_generate(queue=None, imdb_name=None, rpn_model_path=None, cfg=None,
+def rpn_generate(queue=None,
+                 imdb_name=None,
+                 image_set=None,
+                 devkit_path=None,
+                 rpn_model_path=None,
+                 cfg=None,
                  rpn_test_prototxt=None):
     """Use a trained RPN to generate proposals.
     """
@@ -164,7 +191,7 @@ def rpn_generate(queue=None, imdb_name=None, rpn_model_path=None, cfg=None,
     # NOTE: the matlab implementation computes proposals on flipped images, too.
     # We compute them on the image once and then flip the already computed
     # proposals. This might cause a minor loss in mAP (less proposal jittering).
-    imdb = get_imdb(imdb_name)
+    imdb = get_imdb(imdb_name, image_set, devkit_path)
     print 'Loaded dataset `{:s}` for proposal generation'.format(imdb.name)
 
     # Load RPN and configure output directory
@@ -183,7 +210,12 @@ def rpn_generate(queue=None, imdb_name=None, rpn_model_path=None, cfg=None,
     print 'Wrote RPN proposals to {}'.format(rpn_proposals_path)
     queue.put({'proposal_path': rpn_proposals_path})
 
-def train_fast_rcnn(queue=None, imdb_name=None, init_model=None, solver=None,
+def train_fast_rcnn(queue=None,
+                    imdb_name=None,
+                    image_set=None,
+                    devkit_path=None,
+                    init_model=None,
+                    solver=None,
                     max_iters=None, cfg=None, rpn_file=None):
     """Train a Fast R-CNN using proposals generated by an RPN.
     """
@@ -199,7 +231,10 @@ def train_fast_rcnn(queue=None, imdb_name=None, init_model=None, solver=None,
     import caffe
     _init_caffe(cfg)
 
-    roidb, imdb = get_roidb(imdb_name, rpn_file=rpn_file)
+    roidb, imdb = get_roidb(imdb_name,
+                            image_set=image_set,
+                            devkit_path=devkit_path,
+                            rpn_file=rpn_file)
     output_dir = get_output_dir(imdb)
     print 'Output will be saved to `{:s}`'.format(output_dir)
     # Train Fast R-CNN
@@ -215,7 +250,7 @@ def train_fast_rcnn(queue=None, imdb_name=None, init_model=None, solver=None,
 
 if __name__ == '__main__':
     args = parse_args()
-
+    args.imdb_name=tpod.TPOD_IMDB_NAME
     print('Called with args:')
     print(args)
 
@@ -235,7 +270,7 @@ if __name__ == '__main__':
     # queue for communicated results between processes
     mp_queue = mp.Queue()
     # solves, iters, etc. for each training stage
-    solvers, max_iters, rpn_test_prototxt = get_solvers(args.net_name)
+    solvers, max_iters, rpn_test_prototxt = get_solvers(args.devkit_path)
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Stage 1 RPN, init from ImageNet model'
@@ -245,6 +280,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             init_model=args.pretrained_model,
             solver=solvers[0],
             max_iters=max_iters[0],
@@ -261,6 +298,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             rpn_model_path=str(rpn_stage1_out['model_path']),
             cfg=cfg,
             rpn_test_prototxt=rpn_test_prototxt)
@@ -277,6 +316,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             init_model=args.pretrained_model,
             solver=solvers[1],
             max_iters=max_iters[1],
@@ -295,6 +336,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             init_model=str(fast_rcnn_stage1_out['model_path']),
             solver=solvers[2],
             max_iters=max_iters[2],
@@ -311,6 +354,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             rpn_model_path=str(rpn_stage2_out['model_path']),
             cfg=cfg,
             rpn_test_prototxt=rpn_test_prototxt)
@@ -327,6 +372,8 @@ if __name__ == '__main__':
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
+            image_set=args.image_set,
+            devkit_path=args.devkit_path,
             init_model=str(rpn_stage2_out['model_path']),
             solver=solvers[3],
             max_iters=max_iters[3],

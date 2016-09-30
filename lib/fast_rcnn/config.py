@@ -220,6 +220,7 @@ def get_output_dir(imdb, net=None):
         outdir = osp.join(outdir, net.name)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
+    print 'created imdb output dir: {}'.format(outdir)
     return outdir
 
 def _merge_a_into_b(a, b):

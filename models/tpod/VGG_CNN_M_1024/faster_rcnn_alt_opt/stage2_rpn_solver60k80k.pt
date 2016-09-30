@@ -1,4 +1,4 @@
-train_net: "models/web_demo/VGG_CNN_M_1024/faster_rcnn_alt_opt/stage2_rpn_train.pt"
+train_net: "/home/junjuew/object-detection-web/demo-web/train/1_test/prototxt/stage2_rpn_train.pt"
 
 base_lr: 0.001
 lr_policy: "step"

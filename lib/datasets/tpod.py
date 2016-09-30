@@ -21,13 +21,17 @@ from fast_rcnn.config import cfg
 import pdb
 
 class tpod(imdb):
-    TPOD_IMDB_NAME='tpod'
+    TPOD_IMDB_NAME='web_demo'
 
     def __init__(self, image_set, devkit_path):
+        '''
+        # image_set should be a filename (without extension) in devkit_path that contains# a list of image paths
+        # devkit_path should have an annotation dir, a label text
+        '''
         imdb.__init__(self, self.__class__.TPOD_IMDB_NAME)
 
         if not image_set or not devkit_path or not os.path.isdir(devkit_path):
-            raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain a text file with all labels named "label.txt". devkit_path/image_set.txt should be a text file that each line is an absolute path to an image')
+            raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain a text file with all labels named "label.txt". devkit_path/image_set.txt should be a text file that each line is an absolute path to an image\n Right now image_set: {} devkit_path: {}'.format(image_set, devkit_path))
             
         self._image_set = image_set
         self._devkit_path = devkit_path
@@ -143,6 +147,7 @@ class tpod(imdb):
         return roidb
 
     def rpn_roidb(self):
+        print 'rpn_roidb called'
         if not self._is_test():        
             gt_roidb = self.gt_roidb()
             rpn_roidb = self._load_rpn_roidb(gt_roidb)
@@ -154,6 +159,7 @@ class tpod(imdb):
 
     def _load_rpn_roidb(self, gt_roidb):
         filename = self.config['rpn_file']
+        print '_load_rpn_roidb called'        
         print 'loading {}'.format(filename)
         assert os.path.exists(filename), \
                'rpn data not found at: {}'.format(filename)

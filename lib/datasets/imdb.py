@@ -12,6 +12,7 @@ from utils.cython_bbox import bbox_overlaps
 import numpy as np
 import scipy.sparse
 from fast_rcnn.config import cfg
+import pdb
 
 class imdb(object):
     """Image database."""
@@ -112,12 +113,11 @@ class imdb(object):
 
             negative_value_indices= np.array(widths[i]) < np.array(oldx2)+1
             boxes[negative_value_indices, 0] = 0
-            print 'negative val indices for boxes[:,0]: {}'.format(negative_value_indices)
+#            print 'negative val indices for boxes[:,0]: {}'.format(negative_value_indices)
             negative_value_indices=  np.array(widths[i]) < np.array(oldx1)+1
             boxes[negative_value_indices, 2] = 0
-            print 'negative val indices for boxes[:,2]: {}'.format(negative_value_indices)
-            
-            print self.image_path_at(i), boxes[:,2], boxes[:,0], oldx1, oldx2, widths[i]
+#            print 'negative val indices for boxes[:,2]: {}'.format(negative_value_indices)
+#            print self.image_path_at(i), boxes[:,2], boxes[:,0], oldx1, oldx2, widths[i]
             assert (boxes[:, 2] >= boxes[:, 0]).all()
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
