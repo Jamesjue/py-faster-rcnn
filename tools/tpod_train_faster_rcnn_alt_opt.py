@@ -102,8 +102,8 @@ def get_solvers(devkit_path):
     
     # Iterations for each training stage
     # max_iters = [80000, 40000, 80000, 40000]
-    max_iters = [10, 10, 10, 10]
-    # max_iters = [10000, 5000, 5000, 2500]
+#    max_iters = [10, 10, 10, 10]
+    max_iters = [10000, 5000, 5000, 2500]
     # Test prototxt for the RPN
     # rpn_test_prototxt = os.path.join(
     #     cfg.MODELS_DIR, devkit_path, n, 'rpn_test.pt')
