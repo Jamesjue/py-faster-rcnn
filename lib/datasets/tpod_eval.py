@@ -69,7 +69,7 @@ def voc_ap(rec, prec, use_07_metric=False):
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
-# sample detpath.format(classname) detection file (text file)  # format: image_id, xtl, ytl, xbr, ybr, label
+# sample detpath.format(classname) detection file (text file)  # format: image_id, confidence, xtl, ytl, xbr, ybr, label
 # 1 1.000 132.3 94.6 457.8 339.2
 # 2 1.000 111.0 81.0 433.7 326.0
 # 3 1.000 82.4 75.8 432.2 307.1
