@@ -83,7 +83,7 @@ class Query(Resource):
         return detect_result, 201
 
 api.add_resource(Query, '/<string:query_id>')
-    
+
 def demo(net, im):
     """Detect object classes in an image using pre-computed object proposals."""
     # Detect all object classes and regress object bounds
@@ -115,27 +115,27 @@ def demo(net, im):
             ret.append( (cls, bbox, score) )
     return ret
 
+gpu=True
+gpu_id=0
+cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+prototxt = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
+                        'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+caffemodel = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
+                          'faster_rcnn_alt_opt', 'model.caffemodel')
+if not os.path.isfile(caffemodel):
+    raise IOError(('{:s} not found.\nDid you run ./data/script/'
+                   'fetch_faster_rcnn_models.sh?').format(caffemodel))
+if gpu:
+    caffe.set_mode_gpu()
+    caffe.set_device(gpu_id)
+    cfg.GPU_ID = gpu_id
+else:
+    caffe.set_mode_cpu()
+    
+net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+print '\n\nLoaded network {:s}'.format(caffemodel)
+    
 def detect(im, gpu=True, gpu_id=0):
-    cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-    prototxt = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
-                            'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-    caffemodel = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
-                            'faster_rcnn_alt_opt', 'model.caffemodel')
-
-    if not os.path.isfile(caffemodel):
-        raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
-
-    if gpu:
-        caffe.set_mode_gpu()
-        caffe.set_device(gpu_id)
-        cfg.GPU_ID = gpu_id
-    else:
-        caffe.set_mode_cpu()        
-    net = caffe.Net(prototxt, caffemodel, caffe.TEST)
-
-    print '\n\nLoaded network {:s}'.format(caffemodel)
-
     return demo(net, im)
 
 if __name__ == '__main__':
