@@ -117,14 +117,14 @@ def parse_args():
 
     return args
 
-def init_net(prototxt, caffemodel, labelfile, cpu_mode=False):
+def init_net(prototxt, caffemodel, labelfile, cpu_mode=False, gpu_id=0):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
     if cpu_mode:
         caffe.set_mode_cpu()
     else:
         caffe.set_mode_gpu()
-        caffe.set_device(args.gpu_id)
-        cfg.GPU_ID = args.gpu_id
+        caffe.set_device(gpu_id)
+        cfg.GPU_ID = gpu_id
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
     print '\n\nLoaded network {:s}'.format(caffemodel)
     CLASSES=read_in_labels(labelfile)

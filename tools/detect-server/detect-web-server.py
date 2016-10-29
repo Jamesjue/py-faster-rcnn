@@ -53,7 +53,12 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # set content max to be 16MB
 app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
-net=None
+
+base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_op'
+prototxt = os.path.join(base_dir, 'faster_rcnn_test.py')
+caffemodel = os.path.join(base_dir, 'model.caffemodel')
+labelfile = os.path.join(base_dir, 'labels.txt')
+net=init_net(prototxt, caffemodel, labelfile, cpu_mode=False)
 
 parser = reqparse.RequestParser()
 parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files', required=True)
@@ -94,10 +99,4 @@ class Query(Resource):
 api.add_resource(Query, '/<string:query_id>')
 
 if __name__ == '__main__':
-    global net
-    base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_op'
-    prototxt = os.path.join(base_dir, 'faster_rcnn_test.py')
-    caffemodel = os.path.join(base_dir, 'model.caffemodel')
-    labelfile = os.path.join(base_dir, 'labels.txt')
-    net=init_net()
     app.run(debug=True)
