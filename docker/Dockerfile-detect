@@ -60,7 +60,7 @@ RUN git fetch && git pull && pip install -r requirements.txt
 # add model if there is one
 ADD model.caffemodel /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
 ADD labels.txt /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
-ADD faster_rcnn_test.py /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
+ADD faster_rcnn_test.pt /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
 
 # run twistd wsgi to server python application
 WORKDIR /py-faster-rcnn
