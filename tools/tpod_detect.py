@@ -117,27 +117,27 @@ def parse_args():
 
     return args
 
-if __name__ == '__main__':
+def init_net(prototxt, caffemodel, labelfile, cpu_mode=False):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-    args = parse_args()
-    prototxt = args.prototxt
-    caffemodel = args.caffemodel
-    if not os.path.isfile(caffemodel):
-        raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
-
-    if args.cpu_mode:
+    if cpu_mode:
         caffe.set_mode_cpu()
     else:
         caffe.set_mode_gpu()
         caffe.set_device(args.gpu_id)
         cfg.GPU_ID = args.gpu_id
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
-
     print '\n\nLoaded network {:s}'.format(caffemodel)
-
-    # j: read in a label file
-    CLASSES=read_in_labels(args.labels)
+    CLASSES=read_in_labels(labelfile)
+    return net
+    
+if __name__ == '__main__':
+    args = parse_args()
+    prototxt = args.prototxt
+    caffemodel = args.caffemodel
+    if not os.path.isfile(caffemodel):
+        raise IOError(('{:s} not found.\nDid you run ./data/script/'
+                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
+    net=init_net(prototxt, caffemodel, args.labels, cpu_mode=False)
     im=cv2.imread(args.im)
     dets=tpod_detect_image(net, im, min_cf=args.min_cf)
     

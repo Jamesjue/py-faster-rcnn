@@ -27,8 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-de
 RUN pip install cython easydict
 
 # install py-faster-rcnn
+ARG CACHEBUST=1
 WORKDIR /
-RUN git clone --recursive https://github.com/Jamesjue/py-faster-rcnn.git
+RUN git clone --recursive https://github.com/junjuew/py-faster-rcnn.git
 
 WORKDIR /py-faster-rcnn
 
@@ -57,7 +58,9 @@ WORKDIR /py-faster-rcnn/tools/detect-server
 RUN git fetch && git pull && pip install -r requirements.txt
 
 # add model if there is one
-ADD model.caffemodel /py-faster-rcnn/models/web_demo/VGG_CNN_M_1024/faster_rcnn_alt_opt/model.caffemodel
+ADD model.caffemodel /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
+ADD labels.txt /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
+ADD faster_rcnn_test.py /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
 
 # run twistd wsgi to server python application
 WORKDIR /py-faster-rcnn

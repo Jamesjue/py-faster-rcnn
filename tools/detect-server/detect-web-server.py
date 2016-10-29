@@ -20,7 +20,12 @@ def add_path(path):
         sys.path.insert(0, path)
 this_dir = osp.dirname(__file__)
 add_path(osp.join(this_dir, '..'))
-
+try:
+    import matplotlib as mpl
+    mpl.use('Agg')
+    import matplotlib.pyplot as plt
+except ImportError:
+    print 'no matplotlib. output bounding box in text only'
 import _init_paths
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
@@ -37,6 +42,7 @@ import werkzeug
 import json
 import pdb
 from werkzeug.utils import secure_filename
+from tpod_detect import tpod_detect_image, init_net
 
 CLASSES = ('__background__',
            'object')
@@ -47,9 +53,11 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # set content max to be 16MB
 app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+net=None
 
 parser = reqparse.RequestParser()
-parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
+parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files', required=True)
+parser.add_argument('cf', type=float, location='minimum confidence score')
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -66,6 +74,7 @@ class Query(Resource):
     def post(self, query_id):
         args = parser.parse_args()
         img = args['picture']
+        min_cf = args['cf'] if 'cf' in args else 0.8
         filename = werkzeug.secure_filename(img.filename)
         mimetype = img.content_type
         print mimetype
@@ -78,65 +87,17 @@ class Query(Resource):
             mimetype = img.content_type
             if not allowed_file(img.filename):
                 print 'not allowed:{} '.format(img.filename)
-        detect_result=detect(bgr_img)
+        detect_result=tpod_detect_image(net, bgr_img, min_cf)
         querys[query_id]=detect_result
         return detect_result, 201
 
 api.add_resource(Query, '/<string:query_id>')
 
-def demo(net, im):
-    """Detect object classes in an image using pre-computed object proposals."""
-    # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
-    scores, boxes = im_detect(net, im)
-    timer.toc()
-    print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-
-    # Visualize detections for each class
-    CONF_THRESH = 0.75
-    print 'threashold: {}'.format(CONF_THRESH)
-    NMS_THRESH = 0.3
-    ret=[]
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        inds = np.where(dets[:, -1] >= CONF_THRESH)[0]
-        for i in inds:
-            bbox = map(str, list(dets[i, :4]))
-            score = str(dets[i, -1])
-            print 'detected roi:{} score:{}'.format(bbox, score)
-            ret.append( (cls, bbox, score) )
-    return ret
-
-gpu=True
-gpu_id=0
-cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-prototxt = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
-                        'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-caffemodel = os.path.join(cfg.MODELS_DIR, 'web_demo', 'VGG_CNN_M_1024',
-                          'faster_rcnn_alt_opt', 'model.caffemodel')
-if not os.path.isfile(caffemodel):
-    raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                   'fetch_faster_rcnn_models.sh?').format(caffemodel))
-if gpu:
-    caffe.set_mode_gpu()
-    caffe.set_device(gpu_id)
-    cfg.GPU_ID = gpu_id
-else:
-    caffe.set_mode_cpu()
-    
-net = caffe.Net(prototxt, caffemodel, caffe.TEST)
-print '\n\nLoaded network {:s}'.format(caffemodel)
-    
-def detect(im, gpu=True, gpu_id=0):
-    return demo(net, im)
-
 if __name__ == '__main__':
+    global net
+    base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_op'
+    prototxt = os.path.join(base_dir, 'faster_rcnn_test.py')
+    caffemodel = os.path.join(base_dir, 'model.caffemodel')
+    labelfile = os.path.join(base_dir, 'labels.txt')
+    net=init_net()
     app.run(debug=True)
