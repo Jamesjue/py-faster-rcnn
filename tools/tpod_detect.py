@@ -29,51 +29,43 @@ import caffe, os, sys, cv2
 import argparse
 import sys
 from textwrap import wrap
+from tpod_utils import read_in_labels
 
 CLASSES = ('__background__',
            'object')
-#           'aeroplane', 'bicycle', 'bird', 'boat',
-#           'bottle', 'bus', 'car', 'cat', 'chair',
-#           'cow', 'diningtable', 'dog', 'horse',
-#           'motorbike', 'person', 'pottedplant',
-#           'sheep', 'sofa', 'train', 'tvmonitor')
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
         'zf': ('ZF',
                   'ZF_faster_rcnn_final.caffemodel')}
 
-fig, ax = plt.subplots(figsize=(12, 12))
-def vis_detections(im, class_name, dets, thresh=0.5):
-    """Draw detected bounding boxes."""
-    inds = np.where(dets[:, -1] >= thresh)[0]
+def draw_bbox(ax, class_name, bbox, score):
+    ax.add_patch(
+        plt.Rectangle((bbox[0], bbox[1]),
+                      bbox[2] - bbox[0],
+                      bbox[3] - bbox[1], fill=False,
+                      edgecolor='red', linewidth=3.5)
+        )
+    ax.text(bbox[0], bbox[1] - 2,
+            '{:s} {:.3f}'.format(class_name, score),
+            bbox=dict(facecolor='blue', alpha=0.5),
+            fontsize=14, color='white')
+            
+def vis_detections(im, detect_rets, min_cf):
+    fig, ax = plt.subplots(figsize=(12, 12))    
+    im_rgb = im[:, :, (2, 1, 0)]
+    ax.imshow(im_rgb, aspect='equal')
+
+    for (cls, bbox, score) in detect_rets:
+        draw_bbox(ax, cls, bbox, score)
+
+    ax.set_title('detected conf >= {:.2f}'.format(min_cf))
+    plt.axis('off')
+    plt.tight_layout()
+    plt.draw()
     
-    if len(inds) == 0:
-        print 'nothing detected'
-    else:
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-            print 'detected roi:{} score:{}'.format(bbox, score)
-            ax.add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                              bbox[2] - bbox[0],
-                              bbox[3] - bbox[1], fill=False,
-                              edgecolor='red', linewidth=3.5)
-                )
-            ax.text(bbox[0], bbox[1] - 2,
-                    '{:s} {:.3f}'.format(class_name, score),
-                    bbox=dict(facecolor='blue', alpha=0.5),
-                    fontsize=14, color='white')
-
-
-def demo(net, image_name):
+def tpod_detect_image(net, im, min_cf=0.8):
     """Detect object classes in an image using pre-computed object proposals."""
-
-    # Load the demo image
-    im_file = image_name#os.path.join(cfg.DATA_DIR, 'demo', image_name)
-    im = cv2.imread(im_file)
-
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
@@ -81,16 +73,11 @@ def demo(net, image_name):
     timer.toc()
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-
-    # Visualize detections for each class
-    im_rgb = im[:, :, (2, 1, 0)]
-    ax.imshow(im_rgb, aspect='equal')
+    print 'returning only bx cf > {}'.format(min_cf)
     
-    CONF_THRESH = 0.75
-    print 'threashold: {}'.format(CONF_THRESH)
     NMS_THRESH = 0.3
+    ret=[]
     for cls_ind, cls in enumerate(CLASSES[1:]):
-        print 'predicting class {}'.format(cls)
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
@@ -98,16 +85,13 @@ def demo(net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        print dets
-        if 'matplotlib' in sys.modules:
-            vis_detections(im, cls, dets, thresh=CONF_THRESH)
-
-    ax.set_title(("\n".join(wrap('p({} | box) >= {:.2f}'.format(CLASSES,CONF_THRESH), 40))),
-                  fontsize=14)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.draw()
-            
+        inds = np.where(dets[:, -1] >= min_cf)[0]
+        for i in inds:
+            bbox = list(dets[i, :4])
+            score = dets[i, -1]
+            print 'detected {} at {} score:{}'.format(cls, bbox, score)
+            ret.append( (cls, bbox, score) )
+    return ret
 
 def parse_args():
     """Parse input arguments."""
@@ -121,22 +105,23 @@ def parse_args():
     parser.add_argument('--prototxt', dest='prototxt', help='Prototxt of Network')
     parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
     parser.add_argument('--labels', dest='labels', help='file contain labels',
-                        default=None) 
-    parser.add_argument('--output', dest='destination', help='Output location of image detections')
+                        default=None)
+    parser.add_argument('--cf', dest='min_cf', help='cutoff confidence score',
+                        default=0.8, type=float) 
+    parser.add_argument('--output',
+                        dest='destination',
+                        help='Output location of image detections',
+                        default=None
+    )
     args = parser.parse_args()
 
     return args
 
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-
     args = parse_args()
-
-    prototxt = args.prototxt#os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
-               #             'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-    caffemodel = args.caffemodel#os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                 #             NETS[args.demo_net][1])
-
+    prototxt = args.prototxt
+    caffemodel = args.caffemodel
     if not os.path.isfile(caffemodel):
         raise IOError(('{:s} not found.\nDid you run ./data/script/'
                        'fetch_faster_rcnn_models.sh?').format(caffemodel))
@@ -152,19 +137,20 @@ if __name__ == '__main__':
     print '\n\nLoaded network {:s}'.format(caffemodel)
 
     # j: read in a label file
-    labelfile=args.labels
-    if labelfile and os.path.isfile(labelfile):
-        with open(labelfile, 'r') as f:
-            labels=f.read().splitlines()
-        labels.insert(0, '__background__')
-        CLASSES=(labels)
+    CLASSES=read_in_labels(args.labels)
+    im=cv2.imread(args.im)
+    dets=tpod_detect_image(net, im, min_cf=args.min_cf)
+    
+    if args.destination is not None and 'matplotlib' in sys.modules:
+        vis_detections(im, dets, args.min_cf)
+        plt.savefig(args.destination)
     
     # Warmup on a dummy image
     # im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
     # for i in xrange(2):
     #     _, _= im_detect(net, im)
 
-    demo(net, args.im)
+
     #im_names = args.im#['000456.jpg', '000542.jpg', '001150.jpg',
                 #'001763.jpg', '004545.jpg']
     #for im_name in im_names:
@@ -175,4 +161,4 @@ if __name__ == '__main__':
 #    plt.show()
 
 
-    plt.savefig(args.destination)
+
