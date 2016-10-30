@@ -30,9 +30,7 @@ import argparse
 import sys
 from textwrap import wrap
 from tpod_utils import read_in_labels
-
-CLASSES = ('__background__',
-           'object')
+import pdb
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -64,7 +62,7 @@ def vis_detections(im, detect_rets, min_cf):
     plt.tight_layout()
     plt.draw()
     
-def tpod_detect_image(net, im, min_cf=0.8):
+def tpod_detect_image(net, im, classes, min_cf=0.8):
     """Detect object classes in an image using pre-computed object proposals."""
     # Detect all object classes and regress object bounds
     timer = Timer()
@@ -77,7 +75,7 @@ def tpod_detect_image(net, im, min_cf=0.8):
     
     NMS_THRESH = 0.3
     ret=[]
-    for cls_ind, cls in enumerate(CLASSES[1:]):
+    for cls_ind, cls in enumerate(classes[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
@@ -87,8 +85,8 @@ def tpod_detect_image(net, im, min_cf=0.8):
         dets = dets[keep, :]
         inds = np.where(dets[:, -1] >= min_cf)[0]
         for i in inds:
-            bbox = list(dets[i, :4])
-            score = dets[i, -1]
+            bbox = map(float,list(dets[i, :4]))
+            score = float(dets[i, -1])
             print 'detected {} at {} score:{}'.format(cls, bbox, score)
             ret.append( (cls, bbox, score) )
     return ret
@@ -117,7 +115,7 @@ def parse_args():
 
     return args
 
-def init_net(prototxt, caffemodel, labelfile, cpu_mode=False, gpu_id=0):
+def init_net(prototxt, caffemodel, labelfile, cfg, cpu_mode=False, gpu_id=0):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
     if cpu_mode:
         caffe.set_mode_cpu()
@@ -127,19 +125,23 @@ def init_net(prototxt, caffemodel, labelfile, cpu_mode=False, gpu_id=0):
         cfg.GPU_ID = gpu_id
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
     print '\n\nLoaded network {:s}'.format(caffemodel)
-    CLASSES=read_in_labels(labelfile)
-    return net
+    classes=read_in_labels(labelfile)
+    return net, tuple(classes)
     
 if __name__ == '__main__':
     args = parse_args()
     prototxt = args.prototxt
     caffemodel = args.caffemodel
+    labelfile=args.labels
+    cpu_mode=False
+    gpu_id=0
     if not os.path.isfile(caffemodel):
         raise IOError(('{:s} not found.\nDid you run ./data/script/'
                        'fetch_faster_rcnn_models.sh?').format(caffemodel))
-    net=init_net(prototxt, caffemodel, args.labels, cpu_mode=False)
+        
+    net, classes=init_net(prototxt, caffemodel, args.labels, cfg, cpu_mode=False)
     im=cv2.imread(args.im)
-    dets=tpod_detect_image(net, im, min_cf=args.min_cf)
+    dets=tpod_detect_image(net, im, classes, min_cf=args.min_cf)
     
     if args.destination is not None and 'matplotlib' in sys.modules:
         vis_detections(im, dets, args.min_cf)

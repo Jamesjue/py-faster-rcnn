@@ -54,15 +54,16 @@ app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
-base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt'
+#base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt'
+base_dir='/home/junjuew/object-detection-web/demo-web/deploy/15'
 prototxt = os.path.join(base_dir, 'faster_rcnn_test.pt')
 caffemodel = os.path.join(base_dir, 'model.caffemodel')
 labelfile = os.path.join(base_dir, 'labels.txt')
-net=init_net(prototxt, caffemodel, labelfile, cpu_mode=False)
+net, classes=init_net(prototxt, caffemodel, labelfile, cfg, cpu_mode=False)
 
 parser = reqparse.RequestParser()
 parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files', required=True)
-parser.add_argument('cf', type=float, location='minimum confidence score')
+parser.add_argument('cf', type=float)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -79,22 +80,22 @@ class Query(Resource):
     def post(self, query_id):
         args = parser.parse_args()
         img = args['picture']
-        min_cf = args['cf'] if 'cf' in args else 0.8
+        min_cf = args['cf'] if args['cf'] is not None else 0.8
+        print 'min_cf: {}'.format(min_cf)
         filename = werkzeug.secure_filename(img.filename)
         mimetype = img.content_type
         print mimetype
         ctt=np.fromstring(img.read(), dtype=np.uint8)
         bgr_img=cv2.imdecode(ctt, cv2.IMREAD_UNCHANGED)
         cv2.imwrite('received.jpg', bgr_img)
-        print bgr_img
         if img:
             filename = secure_filename(img.filename)
             mimetype = img.content_type
             if not allowed_file(img.filename):
                 print 'not allowed:{} '.format(img.filename)
-        detect_result=tpod_detect_image(net, bgr_img, min_cf)
+        detect_result=tpod_detect_image(net, bgr_img, classes, min_cf=min_cf)
         querys[query_id]=detect_result
-        return detect_result, 201
+        return json.dumps(detect_result), 201
 
 api.add_resource(Query, '/<string:query_id>')
 
