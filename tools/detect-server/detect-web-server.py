@@ -54,7 +54,7 @@ app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
-base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_op'
+base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt'
 prototxt = os.path.join(base_dir, 'faster_rcnn_test.pt')
 caffemodel = os.path.join(base_dir, 'model.caffemodel')
 labelfile = os.path.join(base_dir, 'labels.txt')
