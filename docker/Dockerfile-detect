@@ -32,7 +32,7 @@ WORKDIR /
 RUN git clone --recursive https://github.com/junjuew/py-faster-rcnn.git
 
 WORKDIR /py-faster-rcnn
-RUN git checkout tags/v0.1
+RUN git checkout tags/v0.2
 RUN cd lib && \
     make -j$(nproc)
 
