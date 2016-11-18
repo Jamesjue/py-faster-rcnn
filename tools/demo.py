@@ -14,8 +14,8 @@ See README.md for installation instructions before running.
 """
 try:
     import matplotlib as mpl
-    import matplotlib.pyplot as plt
     mpl.use('Agg')
+    import matplotlib.pyplot as plt
 except ImportError:
     print 'no matplotlib. output bounding box in text only'
 import _init_paths

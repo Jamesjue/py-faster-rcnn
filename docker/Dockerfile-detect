@@ -27,12 +27,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-de
 RUN pip install cython easydict
 
 # install py-faster-rcnn
-ARG CACHEBUST=1
+ARG CACHEBUST=2
 WORKDIR /
 RUN git clone --recursive https://github.com/junjuew/py-faster-rcnn.git
 
 WORKDIR /py-faster-rcnn
-
+RUN git checkout tags/v0.1
 RUN cd lib && \
     make -j$(nproc)
 
@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y python-twisted && \
 
 # install requirement for python detect-server
 WORKDIR /py-faster-rcnn/tools/detect-server
-RUN git fetch && git pull && pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # add model if there is one
 ADD model.caffemodel /py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt/
