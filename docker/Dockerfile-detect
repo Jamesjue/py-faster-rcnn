@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-de
 RUN pip install cython easydict
 
 # install py-faster-rcnn
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 WORKDIR /
 RUN git clone --recursive https://github.com/junjuew/py-faster-rcnn.git
 
