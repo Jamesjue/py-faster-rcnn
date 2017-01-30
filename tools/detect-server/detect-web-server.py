@@ -86,13 +86,13 @@ class Query(Resource):
         mimetype = img.content_type
         print mimetype
         ctt=np.fromstring(img.read(), dtype=np.uint8)
-        bgr_img=cv2.imdecode(ctt, cv2.IMREAD_UNCHANGED)
-        cv2.imwrite('received.jpg', bgr_img)
+        bgr_img=cv2.imdecode(ctt, cv2.IMREAD_COLOR)
         if img:
             filename = secure_filename(img.filename)
             mimetype = img.content_type
             if not allowed_file(img.filename):
                 print 'not allowed:{} '.format(img.filename)
+                return json.dumps([]), 400
         detect_result=tpod_detect_image(net, bgr_img, classes, min_cf=min_cf)
         querys[query_id]=detect_result
         return json.dumps(detect_result), 201

@@ -61,7 +61,7 @@ def vis_detections(im, detect_rets, min_cf):
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
-    
+
 def tpod_detect_image(net, im, classes, min_cf=0.8):
     """Detect object classes in an image using pre-computed object proposals."""
     # Detect all object classes and regress object bounds
