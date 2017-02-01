@@ -52,10 +52,10 @@ api = Api(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # set content max to be 16MB
 app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
-ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
 
-base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt'
-#base_dir='/home/junjuew/object-detection-web/demo-web/deploy/15'
+#base_dir='/py-faster-rcnn/models/tpod/VGG_CNN_M_1024/faster_rcnn_alt_opt'
+base_dir='/home/junjuew/object-detection-web/demo-web/deploy/67'
 prototxt = os.path.join(base_dir, 'faster_rcnn_test.pt')
 caffemodel = os.path.join(base_dir, 'model.caffemodel')
 labelfile = os.path.join(base_dir, 'labels.txt')
@@ -84,7 +84,7 @@ class Query(Resource):
         print 'min_cf: {}'.format(min_cf)
         filename = werkzeug.secure_filename(img.filename)
         mimetype = img.content_type
-        print mimetype
+        print 'mime type: {}'.format(mimetype)
         ctt=np.fromstring(img.read(), dtype=np.uint8)
         bgr_img=cv2.imdecode(ctt, cv2.IMREAD_COLOR)
         if img:
@@ -92,7 +92,7 @@ class Query(Resource):
             mimetype = img.content_type
             if not allowed_file(img.filename):
                 print 'not allowed:{} '.format(img.filename)
-                return json.dumps([]), 400
+                return json.dumps("Error: unsupported image format: {}".format(img.filename)), 415
         detect_result=tpod_detect_image(net, bgr_img, classes, min_cf=min_cf)
         querys[query_id]=detect_result
         return json.dumps(detect_result), 201
@@ -100,4 +100,4 @@ class Query(Resource):
 api.add_resource(Query, '/<string:query_id>')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=10001)
