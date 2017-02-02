@@ -49,7 +49,7 @@ CLASSES = ('__background__',
 
 app = Flask(__name__)
 api = Api(app)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # set content max to be 16MB
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024 # set content max to be 20MB
 app.config['UPLOAD_FOLDER'] = 'data'
 UPLOAD_FOLDER = '/path/to/the/uploads'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg', 'png'])
