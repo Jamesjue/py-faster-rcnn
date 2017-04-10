@@ -27,7 +27,9 @@ pip install easydict
 cd lib
 make -j$(nproc)
 
+# should be removed in Docker file
 cd ..
+
 cd caffe-fast-rcnn 
 cp Makefile.config.example Makefile.config  
 sed -i 's/BLAS := atlas/BLAS := open/' Makefile.config 

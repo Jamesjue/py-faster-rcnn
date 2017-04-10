@@ -20,23 +20,41 @@ from tpod_eval import voc_eval
 from fast_rcnn.config import cfg
 import pdb
 
+'''
+Documentation:
+this class is used as the loader of the data set
+it should accept one paths: the path for the training data folder, under this folder
+there are three important files
+
+1. (image_set.txt) the image set (the file containing the list of all image paths)
+2. (label_set.txt) the label (the file containing the list of all label contents)
+3. (labels.txt) the file containing name of all labels
+
+On initialization, we can load all image paths and all labels into array, thus during the
+training phase, we only need to read the array
+
+'''
+
 class tpod(imdb):
     TPOD_IMDB_NAME='web_demo'
 
     def __init__(self, image_set, devkit_path):
-        '''
         # image_set should be a filename (without extension) in devkit_path that contains# a list of image paths
         # devkit_path should have an annotation dir, a label text
-        '''
         imdb.__init__(self, self.__class__.TPOD_IMDB_NAME)
+        self._year = '2016'
 
         if not image_set or not devkit_path or not os.path.isdir(devkit_path):
-            raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain a text file with all labels named "label.txt". devkit_path/image_set.txt should be a text file that each line is an absolute path to an image\n Right now image_set: {} devkit_path: {}'.format(image_set, devkit_path))
+            raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain '
+                             'a text file with all labels named "label.txt". devkit_path/image_set.txt should be '
+                             'a text file that each line is an absolute path to an image\n '
+                             'Current image_set: {} devkit_path: {}'.format(image_set, devkit_path))
             
         self._image_set = image_set
         self._devkit_path = devkit_path
-        self._year = '2016'
         self._label_path = os.path.join(self._devkit_path, 'labels.txt')
+
+        # load classes names
         if os.path.isfile(self._label_path):
             labels=[]
             with open(self._label_path, 'r') as f:
@@ -52,6 +70,7 @@ class tpod(imdb):
 
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_index = self._load_image_set_index()
+
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
         self._salt = str(uuid.uuid4())
@@ -66,10 +85,27 @@ class tpod(imdb):
                        'min_size'    : 2}
         print 'initialized imdb from devkit_path: {}, image_set: {}'.format(self._devkit_path, self._image_set) 
 
-    @property
-    def cache_path(self):
-        return self._devkit_path
-        
+    # need customization
+    def _is_test(self):
+        return ('test' in self._image_set)
+
+    # need customization
+    def _load_image_set_index(self):
+        """
+        Load the indexes listed in this dataset's image set file.
+        # Example path to image set file:
+        # self._devkit_path + /test.txt
+        # self._devkit_path + /train.txt
+        """
+        image_set_file = os.path.join(self._devkit_path,
+                                      self._image_set + '.txt')
+        assert os.path.exists(image_set_file), \
+                'Path does not exist: {}'.format(image_set_file)
+        with open(image_set_file) as f:
+            image_index = [x.strip().split() for x in f.readlines()]
+        return image_index
+
+    # need customization
     def image_path_at(self, i):
         """
         Return the absolute path to image i in the image sequence.
@@ -79,20 +115,62 @@ class tpod(imdb):
                 'Path does not exist: {}'.format(image_path)
         return image_path
 
-    def _load_image_set_index(self):
+    # need customization
+    def _load_tpod_annotation(self, index):
         """
-        Load the indexes listed in this dataset's image set file.
-        # Example path to image set file:
-        # self._devkit_path + /test.txt
-        # self._devkit_path + /train.txt        
+        Load image and bounding boxes info from XML file in the PASCAL VOC
+        format.
         """
-        image_set_file = os.path.join(self._devkit_path,
-                                      self._image_set + '.txt')
-        assert os.path.exists(image_set_file), \
-                'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip().split() for x in f.readlines()]
-        return image_index
+        filename = os.path.join(self._devkit_path, 'Annotations', index[0] + '.txt')
+        print 'Loading: {}'.format(filename)
+        import re
+        with open(filename) as f:
+            objs = [x.strip() for x in f.readlines()]
+        num_objs = len(objs)
+
+        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+        gt_classes = np.zeros((num_objs), dtype=np.int32)
+        overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
+        # "Seg" area for pascal is just the box area
+        seg_areas = np.zeros((num_objs), dtype=np.float32)
+
+        # n: the number of objects
+        # c: the number of classes
+        # boxes: a n x 4 matrix, the rect for each object, each row is a box, n is the number of objects
+        # gt_classes: ground truth, a n length array, each element is the class index the object
+        # overlaps: a n x c matrix, in each row, if that object appears, set it to be 1
+        # seg_areas: a n length array, each element is the area size for that object
+
+        # Load object bounding boxes into a data frame.
+        # sample entry: 319 61 275 159 apple
+        for ix, obj in enumerate(objs):
+            # Make pixel indexes 0-based
+            coor = re.findall('\d+', obj)
+
+            x1 = float(coor[0])
+            y1 = float(coor[1])
+            w = float(coor[2])
+            h = float(coor[3])
+            x2 = x1 + w
+            y2 = y1 + h
+            # j: class is the last word in an entry separated by white space
+            cls = self._class_to_ind[str(obj.split(' ')[-1])]
+            boxes[ix, :] = [x1, y1, x2, y2]
+            gt_classes[ix] = cls
+            overlaps[ix, cls] = 1.0
+            seg_areas[ix] = w * h
+
+        overlaps = scipy.sparse.csr_matrix(overlaps)
+
+        return {'boxes' : boxes,
+                'gt_classes': gt_classes,
+                'gt_overlaps' : overlaps,
+                'flipped' : False,
+                'seg_areas' : seg_areas}
+
+    @property
+    def cache_path(self):
+        return self._devkit_path
 
     def gt_roidb(self):
         """
@@ -115,9 +193,6 @@ class tpod(imdb):
 
         return gt_roidb
 
-    def _is_test(self):
-        return ('test' in self._image_set)
-        
     def selective_search_roidb(self):
         """
         Return the database of selective search regions of interest.
@@ -186,51 +261,6 @@ class tpod(imdb):
 
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
-    def _load_tpod_annotation(self, index):
-        """
-        Load image and bounding boxes info from XML file in the PASCAL VOC
-        format.
-        """
-        filename = os.path.join(self._devkit_path, 'Annotations', index[0] + '.txt')
-        print 'Loading: {}'.format(filename)
-        import re
-        with open(filename) as f:
-            objs = [x.strip() for x in f.readlines()]
-        num_objs = len(objs)
-
-        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
-        gt_classes = np.zeros((num_objs), dtype=np.int32)
-        overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
-        # "Seg" area for pascal is just the box area
-        seg_areas = np.zeros((num_objs), dtype=np.float32)
-
-        # Load object bounding boxes into a data frame.
-        # sample entry: 319 61 275 159 apple
-        for ix, obj in enumerate(objs):
-            # Make pixel indexes 0-based
-            coor = re.findall('\d+', obj)
-            
-            x1 = float(coor[0])
-            y1 = float(coor[1])
-            w = float(coor[2])
-            h = float(coor[3])
-            x2 = x1 + w
-            y2 = y1 + h
-            # j: class is the last word in an entry separated by white space
-            cls = self._class_to_ind[str(obj.split(' ')[-1])]
-            boxes[ix, :] = [x1, y1, x2, y2]
-            gt_classes[ix] = cls
-            overlaps[ix, cls] = 1.0
-            seg_areas[ix] = w * h
-
-        overlaps = scipy.sparse.csr_matrix(overlaps)
-
-        return {'boxes' : boxes,
-                'gt_classes': gt_classes,
-                'gt_overlaps' : overlaps,
-                'flipped' : False,
-                'seg_areas' : seg_areas}
-
     def _get_comp_id(self):
         return self._comp_id
 
@@ -259,6 +289,7 @@ class tpod(imdb):
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
+    # need customization
     def _do_python_eval(self, annopath, output_dir, cachedir=None):
         '''annopath = '/home/junjuew/object-detection-web/demo-web/train/headphone-model/Annotations/{}.txt'
         '''

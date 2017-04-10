@@ -71,6 +71,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def combined_roidb(imdb_names, image_set, devkit_path):
     def get_roidb(imdb_name, image_set, devkit_path):
         imdb = get_imdb(imdb_name, image_set, devkit_path)
