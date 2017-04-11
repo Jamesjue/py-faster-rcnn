@@ -96,6 +96,7 @@ def combined_roidb(imdb_names, image_set, devkit_path):
 
 if __name__ == '__main__':
     args = parse_args()
+    print '--- begin main of tpod train net.py'
     args.imdb_name=tpod.TPOD_IMDB_NAME
 
     if args.cfg_file is not None:

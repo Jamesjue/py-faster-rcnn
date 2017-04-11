@@ -1,6 +1,8 @@
 FROM nvidia/cuda:8.0-devel-ubuntu14.04
 MAINTAINER Junjue Wang, Hongkun Leng
 
+ADD models/VGG_CNN_M_1024.v2.caffemodel VGG_CNN_M_1024.v2.caffemodel 
+
 # install py-faster-rcnn dependency
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -34,6 +36,7 @@ RUN git clone --recursive  https://github.com/suanmiao/py-faster-rcnn.git
 WORKDIR /py-faster-rcnn/caffe-fast-rcnn
 RUN pip install easydict && \
     pip install -r python/requirements.txt
+RUN pip install numpy --upgrade
 
 WORKDIR /py-faster-rcnn
 RUN cd lib && \

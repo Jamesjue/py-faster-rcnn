@@ -1,3 +1,5 @@
+# replica of 'tpod_dataset.py', only for debug use
+
 import os, time
 import numpy as np
 import scipy.sparse
