@@ -151,6 +151,7 @@ class tpod(imdb):
         Load image and bounding boxes info from XML file in the PASCAL VOC
         format.
         """
+        index = index[0]
         print 'load tpod annotation ' + str(index)
         frame_label = self._annotation_index[index]
         num_objs = self._obj_num_index[index]
