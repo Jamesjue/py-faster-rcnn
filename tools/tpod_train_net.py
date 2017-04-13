@@ -22,7 +22,7 @@ import pprint
 import numpy as np
 import sys
 import os
-from datasets.tpod import tpod
+from datasets.tpod_dataset import tpod
 import tpod_utils
 
 '''
@@ -105,26 +105,36 @@ def parse_args():
     return args
 
 
-def combined_roidb(imdb_names, image_set, devkit_path):
-    def get_roidb(imdb_name, image_set, devkit_path):
-        imdb = get_imdb(imdb_name, image_set, devkit_path)
-        print 'Loaded dataset `{:s}` for training'.format(imdb.name)
-        imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
-        print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
-        roidb = get_training_roidb(imdb)
-        return roidb
+#def combined_roidb(imdb_names, image_set, devkit_path):
+#    def get_roidb(imdb_name, image_set, devkit_path):
+#        imdb = get_imdb(imdb_name, image_set, devkit_path)
+#        print 'Loaded dataset `{:s}` for training'.format(imdb.name)
+#        imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
+#        print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
+#        roidb = get_training_roidb(imdb)
+#        return roidb
+#
+#    roidbs = [get_roidb(s, image_set=image_set, devkit_path=devkit_path)
+#              for s in imdb_names.split('+')]
+#    roidb = roidbs[0]
+#    if len(roidbs) > 1:
+#        print('multiple imdb')
+#        for r in roidbs[1:]:
+#            roidb.extend(r)
+#        imdb = datasets.imdb.imdb(imdb_names)
+#    else:
+#        print('single imdb')
+#        imdb = get_imdb(imdb_names, image_set, devkit_path)
+#    return imdb, roidb
 
-    roidbs = [get_roidb(s, image_set=image_set, devkit_path=devkit_path)
-              for s in imdb_names.split('+')]
-    roidb = roidbs[0]
-    if len(roidbs) > 1:
-        print('multiple imdb')        
-        for r in roidbs[1:]:
-            roidb.extend(r)
-        imdb = datasets.imdb.imdb(imdb_names)
-    else:
-        print('single imdb')
-        imdb = get_imdb(imdb_names, image_set, devkit_path)
+
+def combined_roidb(devkit_path):
+    # we assume that there is only one imdb
+    imdb = tpod(devkit_path)
+    print 'Loaded dataset `{:s}` for training'.format(imdb.name)
+    imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
+    print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
+    roidb = get_training_roidb(imdb)
     return imdb, roidb
 
 
@@ -164,6 +174,12 @@ if __name__ == '__main__':
     # read paths
     devkit_path = os.path.abspath(args.devkit_path)
     output_dir = os.path.abspath(args.output_dir)
+
+    # get data set
+    imdb, roidb = combined_roidb(devkit_path)
+    print '{:d} roidb entries'.format(len(roidb))
+
+
 
 '''
 def train_net(solver_prototxt, roidb, output_dir,
