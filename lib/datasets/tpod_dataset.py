@@ -65,8 +65,6 @@ class tpod(imdb):
             # backward compatibility, single class
             self._classes = ('__background__', # always index 0
                              'object')
-        # not sure whether to minus 1
-        self.num_classes = len(self._classes) - 1
 
         self._image_index = self._load_image_set_index()
         self._annotation_index, self._obj_num_index = self._load_annotations()
