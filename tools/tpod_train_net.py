@@ -24,20 +24,62 @@ import sys
 import os
 from datasets.tpod import tpod
 
+'''
+# arguments needed
+-- gpu
+-- devkit_path
+-- output_dir
+-- iters
+-- weights
+--
+
+'''
+
 def parse_args():
     """
     Parse input arguments
     """
+
+#    parser = argparse.ArgumentParser(description='Train a Fast R-CNN network')
+#    parser.add_argument('--gpu', dest='gpu_id',
+#                        help='GPU device id to use [0]',
+#                        default=0, type=int)
+#    parser.add_argument('--solver', dest='solver',
+#                        help='solver prototxt',
+#                        default=None, type=str)
+#    parser.add_argument('--image_set', dest='image_set',
+#                        help='a file in which each line is a file path',
+#                        default=None, type=str)
+#    parser.add_argument('--devkit_path', dest='devkit_path',
+#                        help='devkit path',
+#                        default=None, type=str)
+#    parser.add_argument('--iters', dest='max_iters',
+#                        help='number of iterations to train',
+#                        default=40000, type=int)
+#    parser.add_argument('--weights', dest='pretrained_model',
+#                        help='initialize with pretrained model weights',
+#                        default=None, type=str)
+#    parser.add_argument('--cfg', dest='cfg_file',
+#                        help='optional config file',
+#                        default=None, type=str)
+#    parser.add_argument('--rand', dest='randomize',
+#                        help='randomize (do not use a fixed seed)',
+#                        action='store_true')
+#    parser.add_argument('--set', dest='set_cfgs',
+#                        help='set config keys', default=None,
+#                        nargs=argparse.REMAINDER)
+#    parser.add_argument('--output_dir', dest='output_dir',
+#                        help='output directory', default=None,
+#                        type=str)
+#    parser.add_argument('--final',
+#                        dest='final_path',
+#                        help='output path',
+#                        default=None)
+
     parser = argparse.ArgumentParser(description='Train a Fast R-CNN network')
     parser.add_argument('--gpu', dest='gpu_id',
                         help='GPU device id to use [0]',
                         default=0, type=int)
-    parser.add_argument('--solver', dest='solver',
-                        help='solver prototxt',
-                        default=None, type=str)
-    parser.add_argument('--image_set', dest='image_set',
-                        help='a file in which each line is a file path',
-                        default=None, type=str)
     parser.add_argument('--devkit_path', dest='devkit_path',
                         help='devkit path',
                         default=None, type=str)
@@ -47,22 +89,9 @@ def parse_args():
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
                         default=None, type=str)
-    parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file',
-                        default=None, type=str)
-    parser.add_argument('--rand', dest='randomize',
-                        help='randomize (do not use a fixed seed)',
-                        action='store_true')
-    parser.add_argument('--set', dest='set_cfgs',
-                        help='set config keys', default=None,
-                        nargs=argparse.REMAINDER)
     parser.add_argument('--output_dir', dest='output_dir',
                         help='output directory', default=None,
                         type=str)
-    parser.add_argument('--final',
-                        dest='final_path',
-                        help='output path',
-                        default=None)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -97,6 +126,23 @@ def combined_roidb(imdb_names, image_set, devkit_path):
 if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
+    print 'command line parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s' %\
+    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.output_dir))
+
+
+'''
+def train_net(solver_prototxt, roidb, output_dir,
+              pretrained_model=None, max_iters=40000):
+'''
+
+'''
+Necessary parameters
+cfg file
+gpu
+imdb, roidb
+output_dir
+
+'''
 
 
 
