@@ -127,7 +127,7 @@ if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
     print 'command line parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s' %\
-    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.output_dir))
+    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.pretrained_model), str(args.output_dir))
 
 
 '''
