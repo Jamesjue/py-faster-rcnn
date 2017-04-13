@@ -140,8 +140,30 @@ if __name__ == '__main__':
     print 'Parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s, num objs %s' %\
     (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.pretrained_model), \
      str(args.output_dir), str(args.num_objects))
+
+    # first, prepare the network structure files, their paths
+    '''
+    '/py-faster-rcnn/assembled_end2end/'
+    faster_rcnn_test.pt
+    solver.prototxt
+    train.prototxt
+    '''
     prepare_network_structures(args.num_objects)
 
+    # read cfg file
+    cfg_from_file('/py-faster-rcnn/sample_end2end/faster_rcnn_end2end.yml')
+
+    # gpu
+    cfg.GPU_ID = args.gpu_id
+    caffe.set_mode_gpu()
+    caffe.set_device(args.gpu_id)
+
+    print('Using config:')
+    pprint.pprint(cfg)
+
+    # read paths
+    devkit_path = os.path.abspath(args.devkit_path)
+    output_dir = os.path.abspath(args.output_dir)
 
 '''
 def train_net(solver_prototxt, roidb, output_dir,
@@ -156,8 +178,6 @@ imdb, roidb
 output_dir
 
 '''
-
-
 
 #    args.imdb_name=tpod.TPOD_IMDB_NAME
 #
