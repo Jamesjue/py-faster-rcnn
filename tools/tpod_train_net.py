@@ -23,6 +23,7 @@ import numpy as np
 import sys
 import os
 from datasets.tpod import tpod
+import tpod_utils
 
 '''
 # arguments needed
@@ -92,6 +93,9 @@ def parse_args():
     parser.add_argument('--output_dir', dest='output_dir',
                         help='output directory', default=None,
                         type=str)
+    parser.add_argument('--num_objects', dest='num_objects',
+                        help='number of objects, excluding the background',
+                        default=0, type=int)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -123,11 +127,20 @@ def combined_roidb(imdb_names, image_set, devkit_path):
         imdb = get_imdb(imdb_names, image_set, devkit_path)
     return imdb, roidb
 
+
+def prepare_network_structures(num_objs):
+    input_dir = '/py-faster-rcnn/sample_end2end'
+    output_dir = '/py-faster-rcnn/assembled_end2end'
+    # add the background into the number of objects
+    tpod_utils.prepare_prototxt_files(num_objs + 1, input_dir, output_dir)
+
 if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
-    print 'command line parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s' %\
-    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.pretrained_model), str(args.output_dir))
+    print 'Parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s, num objs %s' %\
+    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.pretrained_model), \
+     str(args.output_dir), str(args.num_objects))
+    prepare_network_structures(args.num_objects)
 
 
 '''

@@ -15,6 +15,8 @@ def read_in_labels(fp):
 
 # the label_cnt should contains the background class
 def prepare_prototxt_files(label_cnt, input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     # there is always a __background__ class
     # input file name: output file name
     customize_files = {
