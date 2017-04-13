@@ -140,7 +140,7 @@ class tpod(imdb):
         """
         Return the absolute path to image i in the image sequence.
         """
-        image_path = self._image_index[i][-1]
+        image_path = '/' + self._image_index[i][-1]
         assert os.path.exists(image_path), \
                 'Path does not exist: {}'.format(image_path)
         return image_path
