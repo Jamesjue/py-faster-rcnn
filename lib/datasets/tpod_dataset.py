@@ -38,20 +38,21 @@ training phase, we only need to read the array
 class tpod(imdb):
     TPOD_IMDB_NAME='web_demo'
 
-    def __init__(self, image_set, devkit_path):
+    def __init__(self, devkit_path):
         # image_set should be a filename (without extension) in devkit_path that contains# a list of image paths
         # devkit_path should have an annotation dir, a label text
         imdb.__init__(self, self.__class__.TPOD_IMDB_NAME)
         self._year = '2016'
 
-        if not image_set or not devkit_path or not os.path.isdir(devkit_path):
+        if not devkit_path or not os.path.isdir(devkit_path):
             raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain '
                              'a text file with all labels named "label.txt". devkit_path/image_set.txt should be '
                              'a text file that each line is an absolute path to an image\n '
-                             'Current image_set: {} devkit_path: {}'.format(image_set, devkit_path))
+                             'Current devkit_path: {}'.format(devkit_path))
 
-        self._image_set = image_set
+        self._image_set = 'train'
         self._devkit_path = devkit_path
+
         self._label_path = os.path.join(self._devkit_path, 'labels.txt')
         self._label_set_path = os.path.join(self._devkit_path, 'label_set.txt')
         self._image_set_path = os.path.join(self._devkit_path, 'image_set.txt')
@@ -93,7 +94,7 @@ class tpod(imdb):
 
     # need customization
     def _is_test(self):
-        return ('test' in self._image_set)
+        return False
 
     # need customization
     def _load_image_set_index(self):
