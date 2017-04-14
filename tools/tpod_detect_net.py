@@ -153,7 +153,7 @@ if __name__ == '__main__':
     assert os.path.exists(caffemodel), 'Path does not exist: {}'.format(caffemodel)
     assert os.path.exists(input_path), 'Path does not exist: {}'.format(input_path)
 
-    net, classes=init_net(prototxt, caffemodel, args.labels, cfg, gpu_id)
+    net, classes=init_net(prototxt, caffemodel, labelfile, cfg, gpu_id)
     im = cv2.imread(input_path)
     dets = tpod_detect_image(net, im, classes, min_cf=args.min_cf)
 
