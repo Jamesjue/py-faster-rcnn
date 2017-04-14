@@ -16,6 +16,7 @@ import os
 
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
+import google.protobuf.text_format
 
 class SolverWrapper(object):
     """A simple wrapper around Caffe's solver.
@@ -67,6 +68,8 @@ class SolverWrapper(object):
             orig_0 = net.params['bbox_pred'][0].data.copy()
             orig_1 = net.params['bbox_pred'][1].data.copy()
 
+            print 'bbox pred ' + str(net.params['bbox_pred'][0].data[...].shape) 
+	    print 'bbox stds ' + str(self.bbox_stds[:, np.newaxis].shape)
             # scale and shift with bbox reg unnormalization; then save snapshot
             net.params['bbox_pred'][0].data[...] = \
                     (net.params['bbox_pred'][0].data *

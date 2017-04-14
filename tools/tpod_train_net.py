@@ -93,9 +93,6 @@ def parse_args():
     parser.add_argument('--output_dir', dest='output_dir',
                         help='output directory', default=None,
                         type=str)
-    parser.add_argument('--num_objects', dest='num_objects',
-                        help='number of objects, excluding the background',
-                        default=0, type=int)
     parser.add_argument('--train_set_name', dest='train_set_name',
                         help='the name of the train image set and label set file name, '
                              'since they have same name under different directories',
@@ -145,15 +142,33 @@ def combined_roidb(devkit_path):
 def prepare_network_structures(num_objs):
     input_dir = '/py-faster-rcnn/sample_end2end'
     output_dir = '/py-faster-rcnn/assembled_end2end'
-    # add the background into the number of objects
-    tpod_utils.prepare_prototxt_files(num_objs + 1, input_dir, output_dir)
+    # background included
+    tpod_utils.prepare_prototxt_files(num_objs, input_dir, output_dir)
 
+def get_labels(path):
+    f = open(path, 'r')
+    labels = f.read().splitlines()
+    labels.insert(0, '__background__')
+    return labels
+ 
 if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
-    print 'Parameters: gpu %s, iters %s, weights %s, output_dir %s, num objs %s' %\
+    print 'Parameters: gpu %s, iters %s, weights %s, output_dir %s' %\
     (str(args.gpu_id), str(args.max_iters), str(args.pretrained_model), \
-     str(args.output_dir), str(args.num_objects))
+     str(args.output_dir))
+
+    # prepare the train data set
+    print 'train set name %s' % str(args.train_set_name)
+    train_image_list_path = ('/dataset/image_list/%s.txt' % str(args.train_set_name))
+    train_label_list_path = ('/dataset/label_list/%s.txt' % str(args.train_set_name))
+    train_label_name_path = ('/dataset/label_name/%s.txt' % str(args.train_set_name))
+    assert os.path.exists(train_image_list_path), 'Path does not exist: {}'.format(train_image_list_path)
+    assert os.path.exists(train_label_list_path), 'Path does not exist: {}'.format(train_label_list_path)
+    assert os.path.exists(train_label_name_path), 'Path does not exist: {}'.format(train_label_name_path)
+
+    # background included
+    labels = get_labels(train_label_name_path) 
 
     # first, prepare the network structure files, their paths
     '''
@@ -162,7 +177,7 @@ if __name__ == '__main__':
     solver.prototxt
     train.prototxt
     '''
-    prepare_network_structures(args.num_objects)
+    prepare_network_structures(len(labels))
 
     # read cfg file
     cfg_from_file('/py-faster-rcnn/sample_end2end/faster_rcnn_end2end.yml')
@@ -177,14 +192,6 @@ if __name__ == '__main__':
 
     # read paths
     output_dir = os.path.abspath(args.output_dir)
-
-    # prepare the train data set
-    print 'train set name %s' % str(args.train_set_name)
-    train_image_list_path = ('/dataset/image_list/%s.txt' % str(args.train_set_name))
-    train_label_list_path = ('/dataset/label_list/%s.txt' % str(args.train_set_name))
-    train_label_name_path = ('/dataset/label_name/%s.txt' % str(args.train_set_name))
-    assert os.path.exists(train_image_list_path), 'Path does not exist: {}'.format(train_image_list_path)
-    assert os.path.exists(train_label_list_path), 'Path does not exist: {}'.format(train_label_list_path)
 
     if not os.path.exists(TRAIN_PATH):
         os.makedirs(TRAIN_PATH)

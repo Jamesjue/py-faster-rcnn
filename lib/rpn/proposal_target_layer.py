@@ -120,10 +120,16 @@ def _get_bbox_regression_labels(bbox_target_data, num_classes):
     bbox_targets = np.zeros((clss.size, 4 * num_classes), dtype=np.float32)
     bbox_inside_weights = np.zeros(bbox_targets.shape, dtype=np.float32)
     inds = np.where(clss > 0)[0]
+    # print 'num classes ' + str(num_classes)
     for ind in inds:
         cls = clss[ind]
         start = 4 * cls
         end = start + 4
+#        print 'ind ' + str(ind)
+#        print 'cls ' + str(cls) + ' classes ' + str(clss)
+#    	print 'bbox target data ' + str(bbox_targets[ind])
+#    	print 'bbox target data indexed ' + str(bbox_target_data[ind, 1:])
+#    	print 'bbox shape  %s,  %s ' % (str(bbox_targets[ind, start:end].shape), str(bbox_target_data[ind, 1:].shape)) 
         bbox_targets[ind, start:end] = bbox_target_data[ind, 1:]
         bbox_inside_weights[ind, start:end] = cfg.TRAIN.BBOX_INSIDE_WEIGHTS
     return bbox_targets, bbox_inside_weights

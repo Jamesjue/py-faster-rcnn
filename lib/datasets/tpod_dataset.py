@@ -154,9 +154,9 @@ class tpod(imdb):
         index = int(index)
         frame_label = self._annotation_index[index]
         # we should include the background inside
-        num_objs = self._obj_num_index[index] + 1
+        num_objs = self._obj_num_index[index] 
 
-        print 'load tpod annotation %s num objs %s ' % (str(index), str(num_objs))
+        # print 'load tpod annotation %s num objs %s ' % (str(index), str(num_objs))
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
