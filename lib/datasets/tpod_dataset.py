@@ -151,7 +151,7 @@ class tpod(imdb):
         Load image and bounding boxes info from XML file in the PASCAL VOC
         format.
         """
-        index = index[0]
+        index = int(index[0])
         print 'load tpod annotation ' + str(index)
         frame_label = self._annotation_index[index]
         num_objs = self._obj_num_index[index]
@@ -218,7 +218,7 @@ class tpod(imdb):
             return roidb
 
         gt_roidb = [self._load_tpod_annotation(index)
-                    for index in self.image_index]
+                    for index, path in enumerate(self.image_index)]
         with open(cache_file, 'wb') as fid:
             cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote gt roidb to {}'.format(cache_file)
