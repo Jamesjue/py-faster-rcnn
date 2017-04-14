@@ -191,6 +191,7 @@ if __name__ == '__main__':
     else:
         # clear the folder
         shutil.rmtree(TRAIN_PATH)
+        os.makedirs(TRAIN_PATH)
 
     target_image_list_path = TRAIN_PATH + 'image_set.txt'
     target_label_list_path = TRAIN_PATH + 'label_set.txt'
