@@ -96,6 +96,10 @@ def parse_args():
     parser.add_argument('--num_objects', dest='num_objects',
                         help='number of objects, excluding the background',
                         default=0, type=int)
+    parser.add_argument('--train_set_name', dest='train_set_name',
+                        help='the name of the train image set and label set file name, '
+                             'since they have same name under different directories',
+                        default=0, type=int)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -174,6 +178,13 @@ if __name__ == '__main__':
     # read paths
     devkit_path = os.path.abspath(args.devkit_path)
     output_dir = os.path.abspath(args.output_dir)
+
+    # prepare the train data set
+    print 'train set name %s' % str(args.train_set_name)
+    train_image_list_path = ('/dataset/image_list/%s.txt' % str(args.train_set_name))
+    train_label_list_path = ('/dataset/label_list/%s.txt' % str(args.train_set_name))
+    assert os.path.exists(train_image_list_path), 'Path does not exist: {}'.format(train_image_list_path)
+    assert os.path.exists(train_label_list_path), 'Path does not exist: {}'.format(train_label_list_path)
 
     # get data set
     imdb, roidb = combined_roidb(devkit_path)
