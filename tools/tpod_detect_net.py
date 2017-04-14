@@ -145,7 +145,7 @@ if __name__ == '__main__':
     args = parse_args()
     caffemodel = args.caffemodel
 
-    prototxt = '/py-faster-rcnn/assembled_end2end/test.prototxt'
+    prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
     labelfile = '/train/labels.txt'
     gpu_id = args.gpu_id
     input_path = args.input_image
