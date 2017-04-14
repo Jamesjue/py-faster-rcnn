@@ -151,10 +151,12 @@ class tpod(imdb):
         Load image and bounding boxes info from XML file in the PASCAL VOC
         format.
         """
-        print 'load tpod annotation ' + str(index)
         index = int(index)
         frame_label = self._annotation_index[index]
-        num_objs = self._obj_num_index[index]
+        # we should include the background inside
+        num_objs = self._obj_num_index[index] + 1
+
+        print 'load tpod annotation %s num objs %s ' % (str(index), str(num_objs))
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
@@ -184,7 +186,7 @@ class tpod(imdb):
                         x2 = x1 + w
                         y2 = y1 + h
                         # j: class is the last word in an entry separated by white space
-                        cls = i
+                        cls = i + 1
                         boxes[idx, :] = [x1, y1, x2, y2]
                         gt_classes[idx] = cls
                         overlaps[idx, cls] = 1.0
