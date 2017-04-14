@@ -38,7 +38,7 @@ def prepare_roidb(imdb):
         # sanity checks
         # max overlap of 0 => class should be zero (background)
         zero_inds = np.where(max_overlaps == 0)[0]
-        print ' check index %s overlap %s ' % (str(i), str(gt_overlaps))
+        # print ' check index %s overlap %s ' % (str(i), str(gt_overlaps))
         assert all(max_classes[zero_inds] == 0)
         # max overlap > 0 => class should not be zero (must be a fg class)
         nonzero_inds = np.where(max_overlaps > 0)[0]
