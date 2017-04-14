@@ -187,7 +187,6 @@ class tpod(imdb):
                         y2 = y1 + h
                         # j: class is the last word in an entry separated by white space
                         cls = i + 1
-                        print 'class is ' + str(cls)
                         boxes[idx, :] = [x1, y1, x2, y2]
                         gt_classes[idx] = cls
                         overlaps[idx, cls] = 1.0

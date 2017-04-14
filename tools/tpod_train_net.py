@@ -188,6 +188,9 @@ if __name__ == '__main__':
 
     if not os.path.exists(TRAIN_PATH):
         os.makedirs(TRAIN_PATH)
+    else:
+        # clear the folder
+        shutil.rmtree(TRAIN_PATH)
 
     target_image_list_path = TRAIN_PATH + 'image_set.txt'
     target_label_list_path = TRAIN_PATH + 'label_set.txt'
@@ -200,7 +203,11 @@ if __name__ == '__main__':
     imdb, roidb = combined_roidb(TRAIN_PATH)
     print '{:d} roidb entries'.format(len(roidb))
 
-
+    solver_path = '/py-faster-rcnn/assembled_end2end/solver.prototxt'
+    # begin training
+    train_net(solver_path, roidb, output_dir,
+             pretrained_model=args.pretrained_model,
+             max_iters=args.max_iters)
 
 '''
 def train_net(solver_prototxt, roidb, output_dir,
