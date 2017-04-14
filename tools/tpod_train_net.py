@@ -176,7 +176,6 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     # read paths
-    devkit_path = os.path.abspath(args.devkit_path)
     output_dir = os.path.abspath(args.output_dir)
 
     # prepare the train data set
