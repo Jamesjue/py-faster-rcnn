@@ -24,6 +24,9 @@ import sys
 import os
 from datasets.tpod_dataset import tpod
 import tpod_utils
+import shutil
+
+TRAIN_PATH = '/train/'
 
 '''
 # arguments needed
@@ -81,9 +84,6 @@ def parse_args():
     parser.add_argument('--gpu', dest='gpu_id',
                         help='GPU device id to use [0]',
                         default=0, type=int)
-    parser.add_argument('--devkit_path', dest='devkit_path',
-                        help='devkit path',
-                        default=None, type=str)
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
                         default=40000, type=int)
@@ -151,8 +151,8 @@ def prepare_network_structures(num_objs):
 if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
-    print 'Parameters: gpu %s, dev_path %s, iters %s, weights %s, output_dir %s, num objs %s' %\
-    (str(args.gpu_id), str(args.devkit_path), str(args.max_iters), str(args.pretrained_model), \
+    print 'Parameters: gpu %s, iters %s, weights %s, output_dir %s, num objs %s' %\
+    (str(args.gpu_id), str(args.max_iters), str(args.pretrained_model), \
      str(args.output_dir), str(args.num_objects))
 
     # first, prepare the network structure files, their paths
@@ -183,11 +183,22 @@ if __name__ == '__main__':
     print 'train set name %s' % str(args.train_set_name)
     train_image_list_path = ('/dataset/image_list/%s.txt' % str(args.train_set_name))
     train_label_list_path = ('/dataset/label_list/%s.txt' % str(args.train_set_name))
+    train_label_name_path = ('/dataset/label_name/%s.txt' % str(args.train_set_name))
     assert os.path.exists(train_image_list_path), 'Path does not exist: {}'.format(train_image_list_path)
     assert os.path.exists(train_label_list_path), 'Path does not exist: {}'.format(train_label_list_path)
 
+    if not os.path.exists(TRAIN_PATH):
+        os.makedirs(TRAIN_PATH)
+
+    target_image_list_path = TRAIN_PATH + 'image_set.txt'
+    target_label_list_path = TRAIN_PATH + 'label_set.txt'
+    target_label_name_path = TRAIN_PATH + 'labels.txt'
+    shutil.copyfile(train_image_list_path, target_image_list_path)
+    shutil.copyfile(train_label_list_path, target_label_list_path)
+    shutil.copyfile(train_label_name_path, target_label_name_path)
+
     # get data set
-    imdb, roidb = combined_roidb(devkit_path)
+    imdb, roidb = combined_roidb(TRAIN_PATH)
     print '{:d} roidb entries'.format(len(roidb))
 
 
