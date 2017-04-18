@@ -53,7 +53,7 @@ max_iteration = -1
 for candidate in candidate_models:
     iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
     if iteration_match:
-        iteration = int(iteration_match.group[0])
+        iteration = int(iteration_match.group(1))
         if max_iteration < iteration:
             max_iteration = iteration
             caffemodel = candidate
