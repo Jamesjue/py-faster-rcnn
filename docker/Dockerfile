@@ -37,6 +37,7 @@ WORKDIR /py-faster-rcnn/caffe-fast-rcnn
 RUN pip install easydict && \
     pip install -r python/requirements.txt
 RUN pip install numpy --upgrade
+RUN pip install flask
 
 WORKDIR /py-faster-rcnn
 RUN cd lib && \
