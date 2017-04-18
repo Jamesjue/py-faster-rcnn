@@ -102,7 +102,7 @@ def detect():
 
     global net
     # detect
-    if len(imgs) > 1:
+    if len(imgs) == 1:
         # single image
         if ret_format is None or ret_format == 'box':
             ret = tpod_detect_image(net, imgs[0], classes, confidence)
@@ -125,7 +125,7 @@ def detect():
             for i in range(0, len(imgs)):
                 img = imgs[i]
                 dets = tpod_detect_image(net, img, classes, confidence)
-                vis_detections(imgs[0], dets, confidence)
+                vis_detections(img, dets, confidence)
                 plt.savefig(PATH_RESULT)
                 current_ret = cv2.imread(PATH_RESULT)
                 if ret is None:
