@@ -73,7 +73,7 @@ print '\n\nLoaded network {:s}'.format(caffemodel)
 classes = read_in_labels(labelfile)
 
 
-@app.route('/detect')
+@app.route('/detect', methods=["POST"])
 def detect():
     # read the file
     uploaded_files = flask.request.files.getlist("file[]")
