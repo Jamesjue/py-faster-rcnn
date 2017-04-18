@@ -39,7 +39,7 @@ from flask import Flask
 from flask import request, url_for, jsonify, Response, send_file
 
 DEFAULT_CONFIDENCE = 0.6
-PATH_RESULT = 'output.png'
+PATH_RESULT = '/output.png'
 
 app = Flask(__name__)
 
@@ -76,7 +76,9 @@ classes = read_in_labels(labelfile)
 @app.route('/detect', methods=["POST"])
 def detect():
     # read the file
-    uploaded_files = flask.request.files.getlist("file[]")
+    uploaded_files = [] 
+    for k, v in request.files.items():
+        uploaded_files.append(v)
     if len(uploaded_files) == 0:
         return Response('No file detected')
     print 'input images %s ' % str(uploaded_files)
@@ -87,14 +89,16 @@ def detect():
         img = cv2.imread(img_file.filename)
         imgs.append(img)
 
+    confidence = str(DEFAULT_CONFIDENCE)
     # confidence can be None
-    confidence = request.args.get('confidence')
-    if not confidence:
-        confidence = DEFAULT_CONFIDENCE
+    if 'confidence' in request.form:
+        confidence = str(request.form['confidence'])
     else:
         print 'input confidence %s ' % str(confidence)
     # if ret_format is none, consider it 'box'
-    ret_format = request.args.get('format')
+    ret_format = None
+    if 'format' in request.form:
+        ret_format = str(request.form['format'])
 
     global net
     # detect
@@ -153,7 +157,7 @@ def vis_detections(im, detect_rets, min_cf):
     for (cls, bbox, score) in detect_rets:
         draw_bbox(ax, cls, bbox, score)
 
-    ax.set_title('detected conf >= {:.2f}'.format(min_cf))
+    ax.set_title('detected conf >= %s' % str(min_cf))
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
