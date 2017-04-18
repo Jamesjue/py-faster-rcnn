@@ -79,6 +79,7 @@ def detect():
     uploaded_files = flask.request.files.getlist("file[]")
     if len(uploaded_files) == 0:
         return Response('No file detected')
+    print 'input images %s ' % str(uploaded_files)
     imgs =[]
     for img_file in uploaded_files:
         img_file.save(img_file.filename)
@@ -90,6 +91,8 @@ def detect():
     confidence = request.args.get('confidence')
     if not confidence:
         confidence = DEFAULT_CONFIDENCE
+    else:
+        print 'input confidence %s ' % str(confidence)
     # if ret_format is none, consider it 'box'
     ret_format = request.args.get('format')
 
