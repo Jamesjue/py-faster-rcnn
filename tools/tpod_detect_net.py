@@ -33,6 +33,7 @@ from textwrap import wrap
 from tpod_utils import read_in_labels
 import pdb
 import os, fnmatch
+import re
 
 from flask import Flask
 from flask import request, url_for, jsonify, Response, send_file
