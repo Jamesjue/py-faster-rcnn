@@ -32,11 +32,100 @@ import sys
 from textwrap import wrap
 from tpod_utils import read_in_labels
 import pdb
+import os, fnmatch
 
-NETS = {'vgg16': ('VGG16',
-                  'VGG16_faster_rcnn_final.caffemodel'),
-        'zf': ('ZF',
-               'ZF_faster_rcnn_final.caffemodel')}
+from flask import Flask
+from flask import request, url_for, jsonify, Response, send_file
+
+DEFAULT_CONFIDENCE = 0.6
+PATH_RESULT = 'output.png'
+
+app = Flask(__name__)
+
+# init the net
+candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
+
+assert len(candidate_models) > 0, 'No model file detected'
+
+caffemodel = candidate_models[0]
+max_iteration = -1
+for candidate in candidate_models:
+    iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
+    if iteration_match:
+        iteration = int(iteration_match.group[0])
+        if max_iteration < iteration:
+            max_iteration = iteration
+            caffemodel = candidate
+
+prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
+labelfile = '/train/labels.txt'
+gpu_id = 0
+
+assert os.path.exists(caffemodel), 'Path does not exist: {}'.format(caffemodel)
+
+cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+caffe.set_mode_gpu()
+caffe.set_device(gpu_id)
+cfg.GPU_ID = gpu_id
+net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+print '\n\nLoaded network {:s}'.format(caffemodel)
+classes = read_in_labels(labelfile)
+
+
+@app.route('/detect')
+def detect():
+    # read the file
+    uploaded_files = flask.request.files.getlist("file[]")
+    if len(uploaded_files) == 0:
+        return Response('No file detected')
+    imgs =[]
+    for img_file in uploaded_files:
+        img_file.save(img_file.filename)
+        print 'saved file %s ' % str(img_file.filename)
+        img = cv2.imread(img_file.filename)
+        imgs.append(img)
+
+    # confidence can be None
+    confidence = request.args.get('confidence')
+    if not confidence:
+        confidence = DEFAULT_CONFIDENCE
+    # if ret_format is none, consider it 'box'
+    ret_format = request.args.get('format')
+
+    global net
+    # detect
+    if len(imgs) > 1:
+        # single image
+        if ret_format is None or ret_format == 'box':
+            ret = tpod_detect_image(net, imgs[0], classes, confidence)
+            return Response(str(ret))
+        else:
+            dets = tpod_detect_image(net, imgs[0], classes, confidence)
+            vis_detections(imgs[0], dets, confidence)
+            plt.savefig(PATH_RESULT)
+            return send_file(PATH_RESULT)
+    else:
+        # multiple images
+        if ret_format is None or ret_format == 'box':
+            ret = []
+            for img in imgs:
+                current_ret = tpod_detect_image(net, img, classes, confidence)
+                ret.append(current_ret)
+            return Response(str(ret))
+        else:
+            ret = None
+            for i in range(0, len(imgs)):
+                img = imgs[i]
+                dets = tpod_detect_image(net, img, classes, confidence)
+                vis_detections(imgs[0], dets, confidence)
+                plt.savefig(PATH_RESULT)
+                current_ret = cv2.imread(PATH_RESULT)
+                if ret is None:
+                    ret = current_ret
+                else:
+                    ret = np.vstack((ret, current_ret))
+            cv2.imwrite(PATH_RESULT, ret)
+            return send_file(PATH_RESULT)
 
 
 def draw_bbox(ax, class_name, bbox, score):
@@ -97,46 +186,6 @@ def tpod_detect_image(net, im, classes, min_cf=0.8):
     return ret
 
 
-def parse_args():
-    #    """Parse input arguments."""
-    #    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-    #    parser.add_argument('im', help="Input image", default= '000456.jpg')
-    #    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
-    #                        default=0, type=int)
-    #    parser.add_argument('--cpu', dest='cpu_mode',
-    #                        help='Use CPU mode (overrides --gpu)',
-    #                        action='store_true')
-    #    parser.add_argument('--prototxt', dest='prototxt', help='Prototxt of Network')
-    #    parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
-    #    parser.add_argument('--labels', dest='labels', help='file contain labels',
-    #                        default=None)
-    #    parser.add_argument('--cf', dest='min_cf', help='cutoff confidence score',
-    #                        default=0.8, type=float)
-    #    parser.add_argument('--output',
-    #                        dest='destination',
-    #                        help='Output location of image detections',
-    #                        default=None
-    #    )
-    #    args = parser.parse_args()
-
-    """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-    parser.add_argument('--input_image', dest='input_image', help="Input image", default='000456.jpg')
-    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
-                        default=0, type=int)
-    parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
-    parser.add_argument('--cf', dest='min_cf', help='cutoff confidence score',
-                        default=0.8, type=float)
-    parser.add_argument('--output',
-                        dest='destination',
-                        help='Output location of image detections',
-                        default=None
-                        )
-    args = parser.parse_args()
-
-    return args
-
-
 def init_net(prototxt, caffemodel, labelfile, cfg, gpu_id):
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
     caffe.set_mode_gpu()
@@ -147,23 +196,63 @@ def init_net(prototxt, caffemodel, labelfile, cfg, gpu_id):
     classes = read_in_labels(labelfile)
     return net, tuple(classes)
 
+# def parse_args():
+#     #    """Parse input arguments."""
+#     #    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+#     #    parser.add_argument('im', help="Input image", default= '000456.jpg')
+#     #    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
+#     #                        default=0, type=int)
+#     #    parser.add_argument('--cpu', dest='cpu_mode',
+#     #                        help='Use CPU mode (overrides --gpu)',
+#     #                        action='store_true')
+#     #    parser.add_argument('--prototxt', dest='prototxt', help='Prototxt of Network')
+#     #    parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
+#     #    parser.add_argument('--labels', dest='labels', help='file contain labels',
+#     #                        default=None)
+#     #    parser.add_argument('--cf', dest='min_cf', help='cutoff confidence score',
+#     #                        default=0.8, type=float)
+#     #    parser.add_argument('--output',
+#     #                        dest='destination',
+#     #                        help='Output location of image detections',
+#     #                        default=None
+#     #    )
+#     #    args = parser.parse_args()
+#
+#     """Parse input arguments."""
+#     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+#     parser.add_argument('--input_image', dest='input_image', help="Input image", default='000456.jpg')
+#     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
+#                         default=0, type=int)
+#     parser.add_argument('--weights', dest='caffemodel', help='Weights of trained network')
+#     parser.add_argument('--cf', dest='min_cf', help='cutoff confidence score',
+#                         default=0.8, type=float)
+#     parser.add_argument('--output',
+#                         dest='destination',
+#                         help='Output location of image detections',
+#                         default=None
+#                         )
+#     args = parser.parse_args()
+#
+#     return args
 
-if __name__ == '__main__':
-    args = parse_args()
-    caffemodel = args.caffemodel
 
-    prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
-    labelfile = '/train/labels.txt'
-    gpu_id = args.gpu_id
-    input_path = args.input_image
 
-    assert os.path.exists(caffemodel), 'Path does not exist: {}'.format(caffemodel)
-    assert os.path.exists(input_path), 'Path does not exist: {}'.format(input_path)
-
-    net, classes = init_net(prototxt, caffemodel, labelfile, cfg, gpu_id)
-    im = cv2.imread(input_path)
-    dets = tpod_detect_image(net, im, classes, min_cf=args.min_cf)
-
-    if args.destination is not None and 'matplotlib' in sys.modules:
-        vis_detections(im, dets, args.min_cf)
-        plt.savefig(args.destination)
+# if __name__ == '__main__':
+#     args = parse_args()
+#     caffemodel = args.caffemodel
+#
+#     prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
+#     labelfile = '/train/labels.txt'
+#     gpu_id = args.gpu_id
+#     input_path = args.input_image
+#
+#     assert os.path.exists(caffemodel), 'Path does not exist: {}'.format(caffemodel)
+#     assert os.path.exists(input_path), 'Path does not exist: {}'.format(input_path)
+#
+#     net, classes = init_net(prototxt, caffemodel, labelfile, cfg, gpu_id)
+#     im = cv2.imread(input_path)
+#     dets = tpod_detect_image(net, im, classes, min_cf=args.min_cf)
+#
+#     if args.destination is not None and 'matplotlib' in sys.modules:
+#         vis_detections(im, dets, args.min_cf)
+#         plt.savefig(args.destination)
