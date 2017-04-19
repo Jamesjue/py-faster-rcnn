@@ -39,7 +39,9 @@ RUN git clone --recursive  https://github.com/suanmiao/py-faster-rcnn.git
 WORKDIR /py-faster-rcnn/caffe-fast-rcnn
 RUN pip install easydict && \
     pip install -r python/requirements.txt
-RUN pip install numpy --upgrade
+
+# must be that version, or it will crash: https://github.com/rbgirshick/py-faster-rcnn/issues/480
+RUN pip install -Iv numpy==1.11.1
 
 
 WORKDIR /py-faster-rcnn
