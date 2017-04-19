@@ -127,9 +127,9 @@ def _get_bbox_regression_labels(bbox_target_data, num_classes):
         end = start + 4
         print 'ind ' + str(ind) + '; start ' + str(start) + '; end ' + str(end)
         print 'cls ' + str(cls) + ' classes ' + str(clss)
-        print 'bbox target data ' + str(bbox_targets[ind, 1:].shape)
+        print 'bbox target data shape ' + str(bbox_targets[ind, 1:].shape)
+        print 'bbox target shape ' + str(bbox_targets[ind].shape)
         # print 'bbox shape  %s,  %s ' % (str(bbox_targets[ind, start:end].shape), str(bbox_target_data[ind, 1:].shape))
-#    	print 'bbox target data ' + str(bbox_targets[ind])
 #    	print 'bbox target data indexed ' + str(bbox_target_data[ind, 1:])
         bbox_targets[ind, start:end] = bbox_target_data[ind, 1:]
         bbox_inside_weights[ind, start:end] = cfg.TRAIN.BBOX_INSIDE_WEIGHTS
