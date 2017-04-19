@@ -37,9 +37,13 @@ WORKDIR /py-faster-rcnn/caffe-fast-rcnn
 RUN pip install easydict && \
     pip install -r python/requirements.txt
 RUN pip install numpy --upgrade
-RUN pip install flask
+
 
 WORKDIR /py-faster-rcnn
+# prepare flask
+RUN pip install flask
+RUN FLASK_APP=tools/tpod_detect_net.py
+
 RUN cd lib && \
     make -j$(nproc)
 
