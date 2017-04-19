@@ -28,6 +28,9 @@ RUN wget -O /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py && \
     python /tmp/get-pip.py && \
     pip install -U pip setuptools
 
+# use cachebust to update my commit
+ARG CACHEBUST=6
+
 # install py-faster-rcnn
 WORKDIR /
 RUN git clone --recursive  https://github.com/suanmiao/py-faster-rcnn.git
