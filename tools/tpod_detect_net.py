@@ -76,7 +76,8 @@ classes = read_in_labels(labelfile)
 @app.route('/detect', methods=["POST", "GET"])
 def detect():
     # read the file
-    uploaded_files = [] 
+    print 'requested files %s ' % str(request.files)
+    uploaded_files = []
     for k, v in request.files.items():
         uploaded_files.append(v)
     if len(uploaded_files) == 0:
