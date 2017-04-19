@@ -29,7 +29,7 @@ RUN wget -O /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py && \
     pip install -U pip setuptools
 
 # use cachebust to update my commit
-ARG CACHEBUST=8
+ARG CACHEBUST=9
 
 # install py-faster-rcnn
 WORKDIR /
