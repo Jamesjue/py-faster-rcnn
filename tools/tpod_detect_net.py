@@ -73,7 +73,7 @@ print '\n\nLoaded network {:s}'.format(caffemodel)
 classes = read_in_labels(labelfile)
 
 
-@app.route('/detect', methods=["POST", "GET"])
+@app.route('/detect', methods=["POST"])
 def detect():
     # read the file
     print 'requested files %s ' % str(request.files)
