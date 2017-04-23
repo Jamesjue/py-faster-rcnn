@@ -107,9 +107,11 @@ def detect():
         # single image
         if ret_format is None or ret_format == 'box':
             ret = tpod_detect_image(net, imgs[0], classes, confidence)
+            print 'detected result ' + str(ret)
             return Response(str(ret))
         else:
             dets = tpod_detect_image(net, imgs[0], classes, confidence)
+            print 'detected result ' + str(dets)
             vis_detections(imgs[0], dets, confidence)
             plt.savefig(PATH_RESULT)
             return send_file(PATH_RESULT)
@@ -119,6 +121,7 @@ def detect():
             ret = []
             for img in imgs:
                 current_ret = tpod_detect_image(net, img, classes, confidence)
+                print 'detected result ' + str(current_ret)
                 ret.append(current_ret)
             return Response(str(ret))
         else:
@@ -126,6 +129,7 @@ def detect():
             for i in range(0, len(imgs)):
                 img = imgs[i]
                 dets = tpod_detect_image(net, img, classes, confidence)
+                print 'detected result ' + str(dets)
                 vis_detections(img, dets, confidence)
                 plt.savefig(PATH_RESULT)
                 current_ret = cv2.imread(PATH_RESULT)
