@@ -43,20 +43,25 @@ PATH_RESULT = '/output.png'
 
 app = Flask(__name__)
 
+
+def get_latest_model_name():
+    # init the net
+    candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
+    assert len(candidate_models) > 0, 'No model file detected'
+    model = candidate_models[0]
+    max_iteration = -1
+    for candidate in candidate_models:
+        iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
+        if iteration_match:
+            iteration = int(iteration_match.group(1))
+            if max_iteration < iteration:
+                max_iteration = iteration
+                model = candidate
+    return model
+
+
 # init the net
-candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
-
-assert len(candidate_models) > 0, 'No model file detected'
-
-caffemodel = candidate_models[0]
-max_iteration = -1
-for candidate in candidate_models:
-    iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
-    if iteration_match:
-        iteration = int(iteration_match.group(1))
-        if max_iteration < iteration:
-            max_iteration = iteration
-            caffemodel = candidate
+caffemodel = get_latest_model_name()
 
 prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
 labelfile = '/train/labels.txt'

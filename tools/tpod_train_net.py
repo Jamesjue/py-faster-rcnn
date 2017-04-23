@@ -25,6 +25,8 @@ import os
 from datasets.tpod_dataset import tpod
 import tpod_utils
 import shutil
+import os, fnmatch
+import re
 
 TRAIN_PATH = '/train/'
 
@@ -145,12 +147,30 @@ def prepare_network_structures(num_objs):
     # background included
     tpod_utils.prepare_prototxt_files(num_objs, input_dir, output_dir)
 
+
 def get_labels(path):
     f = open(path, 'r')
     labels = f.read().splitlines()
     labels.insert(0, '__background__')
     return labels
- 
+
+
+def get_latest_model_name():
+    # init the net
+    candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
+    assert len(candidate_models) > 0, 'No model file detected'
+    model = candidate_models[0]
+    max_iteration = -1
+    for candidate in candidate_models:
+        iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
+        if iteration_match:
+            iteration = int(iteration_match.group(1))
+            if max_iteration < iteration:
+                max_iteration = iteration
+                model = candidate
+    return model
+
+
 if __name__ == '__main__':
     args = parse_args()
     print '--- begin main of tpod train net.py'
@@ -189,6 +209,20 @@ if __name__ == '__main__':
 
     print('Using config:')
     pprint.pprint(cfg)
+
+    # for iterative training:
+    # first, rename the latest model into a fixed name, since it's name might be overwrited
+    if args.pretrained_model == 'iterative':
+        latest_model = get_latest_model_name()
+        print 'detected iterative model %s ' % str(latest_model)
+        FIXED_MODEL_NAME = 'iterative.caffemodel'
+        os.rename(latest_model, FIXED_MODEL_NAME)
+        args.pretrained_model = FIXED_MODEL_NAME
+
+        # delete all other temporary models
+        candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
+        for candidate in candidate_models:
+            os.remove(candidate)
 
     # read paths
     output_dir = os.path.abspath(args.output_dir)
