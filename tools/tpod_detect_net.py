@@ -90,10 +90,10 @@ def detect():
         img = cv2.imread(img_file.filename)
         imgs.append(img)
 
-    confidence = str(DEFAULT_CONFIDENCE)
+    confidence = float(DEFAULT_CONFIDENCE)
     # confidence can be None
     if 'confidence' in request.form:
-        confidence = str(request.form['confidence'])
+        confidence = float(request.form['confidence'])
     else:
         print 'input confidence %s ' % str(confidence)
     # if ret_format is none, consider it 'box'
