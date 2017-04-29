@@ -31,6 +31,7 @@ from fast_rcnn.nms_wrapper import nms
 import cPickle
 from utils.blob import im_list_to_blob
 import pdb
+import shutil
 import tpod_utils
 import os, fnmatch
 import re
