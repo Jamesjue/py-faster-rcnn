@@ -89,7 +89,7 @@ def voc_ap(rec, prec, use_07_metric=False):
 # 5 /home/junjuew/object-detection-web/demo-web/vatic/videos/headphone3.mp4/0/0/4.jpg
 # 6 /home/junjuew/object-detection-web/demo-web/vatic/videos/headphone3.mp4/0/0/5.jpg
 
-def voc_eval(detpath, class_index, image_list_array, annotation_list_array, classname, cachedir, ovthresh=0.5, use_07_metric=False):
+def voc_eval(detpath, class_index, image_list_array, annotation_list_array, classname, cachedir, ovthresh=0.5):
     """rec, prec, ap = voc_eval(detpath,
                                 annopath,
                                 imagesetfile,

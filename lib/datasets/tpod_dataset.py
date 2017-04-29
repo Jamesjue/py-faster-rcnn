@@ -327,10 +327,6 @@ class tpod(imdb):
     def _do_python_eval(self, annopath, output_dir, cachedir=None):
         '''annopath = '/home/junjuew/object-detection-web/demo-web/train/headphone-model/Annotations/{}.txt'
         '''
-        imagesetfile = os.path.join(
-            self._devkit_path,
-            self._image_set + '.txt')
-
         aps = []
         # The PASCAL VOC metric changed in 2010
         if not os.path.isdir(output_dir):
@@ -344,8 +340,7 @@ class tpod(imdb):
             annotation_path_array = self._annotation_index
 
             rec, prec, ap = voc_eval(
-                filename, i,  image_path_array, annotation_path_array, cls, cachedir, ovthresh=0.5,
-                use_07_metric=use_07_metric)
+                filename, i,  image_path_array, annotation_path_array, cls, cachedir, ovthresh=0.5)
             aps += [ap]
             print('AP for {} = {:.4f}'.format(cls, ap))
             print('precision for {} = {}'.format(cls, prec))
