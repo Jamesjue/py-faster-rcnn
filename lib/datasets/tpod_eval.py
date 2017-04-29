@@ -136,6 +136,7 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
         recs = {}
         for i, imagename in enumerate(image_list_array):
             # load annotation for that frame
+            imagename = imagename[0]
 
             objects = []
             # class index should minus one, since it include background
@@ -158,11 +159,12 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
                 obj_struct['bbox'] = [x1,y1,x2, y2]
                 objects.append(obj_struct)
 
+            print imagename
             recs[imagename] = objects
 
             if i % 100 == 0:
                 print 'Reading annotation for {:d}/{:d}'.format(
-                    i + 1, len(imagenames))
+                    i + 1, len(imagename))
         if cachefile:
             # save
             print 'Saving cached annotations to {:s}'.format(cachefile)
@@ -172,7 +174,8 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
     # extract gt objects for this class
     class_recs = {}
     npos = 0
-    for imagename in imagenames:
+    for imagename in image_list_array:
+        imagename = imagename[0]
         # TODO: for backward compatibility only. need a solution for it
         # 'object'==classname is there for models that doesn't have label.txt in their
         # train dir
