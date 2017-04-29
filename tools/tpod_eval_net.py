@@ -319,8 +319,20 @@ if __name__ == '__main__':
 
     net = caffe.Net(prototxt, latest_model, caffe.TEST)
 
+    # prepare data set
     if not os.path.exists(EVAL_PATH):
         os.makedirs(EVAL_PATH)
+    else:
+        # clear the folder
+        shutil.rmtree(EVAL_PATH)
+        os.makedirs(EVAL_PATH)
+
+    target_image_list_path = EVAL_PATH + 'image_set.txt'
+    target_label_list_path = EVAL_PATH + 'label_set.txt'
+    target_label_name_path = EVAL_PATH + 'labels.txt'
+    shutil.copyfile(train_image_list_path, target_image_list_path)
+    shutil.copyfile(train_label_list_path, target_label_list_path)
+    shutil.copyfile(train_label_name_path, target_label_name_path)
 
     imdb = tpod(EVAL_PATH)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
