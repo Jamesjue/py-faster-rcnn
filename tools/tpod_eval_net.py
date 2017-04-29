@@ -37,39 +37,51 @@ def parse_args():
     """
     Parse input arguments
     """
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
-    parser.add_argument('--gpu', dest='gpu_id', help='GPU id to use',
+    # parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
+    # parser.add_argument('--gpu', dest='gpu_id', help='GPU id to use',
+    #                     default=0, type=int)
+    # parser.add_argument('--def', dest='prototxt',
+    #                     help='prototxt file defining the network',
+    #                     default=None, type=str)
+    # parser.add_argument('--net', dest='caffemodel',
+    #                     help='model to test',
+    #                     default=None, type=str)
+    # parser.add_argument('--devkit_path', dest='devkit_path',
+    #                     help='devkit path for web_demo imdb',
+    #                     default=None, type=str)
+    # parser.add_argument('--annopath', dest='annopath',
+    #                     help='annotation path formatter',
+    #                     default=None, type=str)
+    # parser.add_argument('--testsetfile', dest='testsetfile',
+    #                     help='test set file',
+    #                     default=None, type=str)
+    # parser.add_argument('--output_dir', dest='output_dir',
+    #                     default=None,
+    #                     help='output directory', type=str)
+    # parser.add_argument('--cfg', dest='cfg_file',
+    #                     help='optional config file', default=None, type=str)
+    # parser.add_argument('--comp', dest='comp_mode', help='competition mode',
+    #                     action='store_true')
+    # parser.add_argument('--set', dest='set_cfgs',
+    #                     help='set config keys', default=None,
+    #                     nargs=argparse.REMAINDER)
+    # parser.add_argument('--vis', dest='vis', help='visualize detections',
+    #                     action='store_true')
+    # parser.add_argument('--num_dets', dest='max_per_image',
+    #                     help='max number of detections per image',
+    #                     default=100, type=int)
+
+    parser = argparse.ArgumentParser(description='Train a Fast R-CNN network')
+    parser.add_argument('--gpu', dest='gpu_id',
+                        help='GPU device id to use [0]',
                         default=0, type=int)
-    parser.add_argument('--def', dest='prototxt',
-                        help='prototxt file defining the network',
-                        default=None, type=str)
-    parser.add_argument('--net', dest='caffemodel',
-                        help='model to test',
-                        default=None, type=str)
-    parser.add_argument('--devkit_path', dest='devkit_path',
-                        help='devkit path for web_demo imdb',
-                        default=None, type=str)
-    parser.add_argument('--annopath', dest='annopath',
-                        help='annotation path formatter',
-                        default=None, type=str)
-    parser.add_argument('--testsetfile', dest='testsetfile',
-                        help='test set file',
-                        default=None, type=str)
     parser.add_argument('--output_dir', dest='output_dir',
-                        default=None,
-                        help='output directory', type=str)
-    parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default=None, type=str)
-    parser.add_argument('--comp', dest='comp_mode', help='competition mode',
-                        action='store_true')
-    parser.add_argument('--set', dest='set_cfgs',
-                        help='set config keys', default=None,
-                        nargs=argparse.REMAINDER)
-    parser.add_argument('--vis', dest='vis', help='visualize detections',
-                        action='store_true')
-    parser.add_argument('--num_dets', dest='max_per_image',
-                        help='max number of detections per image',
-                        default=100, type=int)
+                        help='output directory', default=None,
+                        type=str)
+    parser.add_argument('--eval_set_name', dest='eval_set_name',
+                        help='the name of the train image set and label set file name, '
+                             'since they have same name under different directories',
+                        default=0, type=int)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -148,22 +160,73 @@ def test_net(net, imdb, annopath, output_dir, max_per_image=100, thresh=0.05, vi
     imdb.evaluate_detections(all_boxes, annopath, output_dir)
 
 
+def prepare_network_structures(num_objs):
+    input_dir = '/py-faster-rcnn/sample_end2end'
+    output_dir = '/py-faster-rcnn/assembled_end2end'
+    # background included
+    tpod_utils.prepare_prototxt_files(num_objs, input_dir, output_dir)
+
+
+def get_labels(path):
+    f = open(path, 'r')
+    labels = f.read().splitlines()
+    labels.insert(0, '__background__')
+    return labels
+
+
+def get_latest_model_name():
+    # init the net
+    candidate_models = fnmatch.filter(os.listdir('.'), 'model_iter_*.caffemodel')
+    assert len(candidate_models) > 0, 'No model file detected'
+    model = candidate_models[0]
+    max_iteration = -1
+    for candidate in candidate_models:
+        iteration_match = re.search(r'model_iter_(\d+)\.caffemodel', candidate)
+        if iteration_match:
+            iteration = int(iteration_match.group(1))
+            if max_iteration < iteration:
+                max_iteration = iteration
+                model = candidate
+    return model
+
+
 if __name__ == '__main__':
     '''
     example cmd:
     ./tpod_test_net.py --def /home/junjuew/object-detection-web/demo-web/py-faster-rcnn/models/web_demo/VGG_CNN_M_1024/faster_rcnn_alt_opt/faster_rcnn_test.pt --devkit_path /home/junjuew/object-detection-web/demo-web/train/headphone-model --net /home/junjuew/object-detection-web/demo-web/model/headphone-model/model.caffemodel --annopath /home/junjuew/object-detection-web/demo-web/train/headphone-model/Annotations/{}.txt --testsetfile test --output_dir ./output
     '''
     args = parse_args()
+    print '--- begin main of tpod train net.py'
+    print 'Parameters: gpu %s, eval_set_name %s, output_dir %s' %\
+    (str(args.gpu_id), str(args.eval_set_name), str(args.output_dir))
 
-    print('Called with args:')
-    print(args)
+    # check evaluation set
+    eval_image_list_path = ('/dataset/image_list/%s.txt' % str(args.eval_set_name))
+    eval_label_list_path = ('/dataset/label_list/%s.txt' % str(args.eval_set_name))
+    eval_label_name_path = ('/dataset/label_name/%s.txt' % str(args.eval_set_name))
+    assert os.path.exists(eval_image_list_path), 'Path does not exist: {}'.format(eval_image_list_path)
+    assert os.path.exists(eval_label_list_path), 'Path does not exist: {}'.format(eval_label_list_path)
+    assert os.path.exists(eval_label_name_path), 'Path does not exist: {}'.format(eval_label_name_path)
 
-    if args.cfg_file is not None:
-        cfg_from_file(args.cfg_file)
-    if args.set_cfgs is not None:
-        cfg_from_list(args.set_cfgs)
+    # background included
+    labels = get_labels(train_label_name_path)
 
+    # first, prepare the network structure files, their paths
+    '''
+    '/py-faster-rcnn/assembled_end2end/'
+    faster_rcnn_test.pt
+    solver.prototxt
+    train.prototxt
+    '''
+    prepare_network_structures(len(labels))
+
+        # read cfg file
+    cfg_from_file('/py-faster-rcnn/sample_end2end/faster_rcnn_end2end.yml')
+
+    # gpu
     cfg.GPU_ID = args.gpu_id
+    caffe.set_mode_gpu()
+    caffe.set_device(args.gpu_id)
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
     # TODO: turn on flag to remove intermediate files
     cfg.cleanup = False  # keep intermediate detection
@@ -171,25 +234,23 @@ if __name__ == '__main__':
     print('Using config:')
     pprint.pprint(cfg)
 
-    if not os.path.exists(args.caffemodel) or not args.annopath or not args.output_dir:
-        print 'Error: not enough args. please see -h'
-        sys.exit(1)
+    latest_model = get_latest_model_name()
 
-    # testsetfile should be a filename (without extension) in devkit_path that contains
-    # a list of image paths
-    test_set = os.path.join(args.devkit_path, args.testsetfile + '.txt')
-    if not os.path.isfile(test_set):
-        print 'Error: test set not found at {}'.format(test_set)
-        sys.exit(1)
-
-    caffe.set_mode_gpu()
-    caffe.set_device(args.gpu_id)
-    net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
-    net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
-
-    imdb = get_imdb(tpod.TPOD_IMDB_NAME, args.testsetfile, devkit_path=args.devkit_path)
-    imdb.competition_mode(args.comp_mode)
-    if not cfg.TEST.HAS_RPN:
-        imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
-
-    test_net(net, imdb, args.annopath, args.output_dir, max_per_image=args.max_per_image, vis=args.vis)
+    # # testsetfile should be a filename (without extension) in devkit_path that contains
+    # # a list of image paths
+    # test_set = os.path.join(args.devkit_path, args.testsetfile + '.txt')
+    # if not os.path.isfile(test_set):
+    #     print 'Error: test set not found at {}'.format(test_set)
+    #     sys.exit(1)
+    #
+    # caffe.set_mode_gpu()
+    # caffe.set_device(args.gpu_id)
+    # net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
+    # net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
+    #
+    # imdb = get_imdb(tpod.TPOD_IMDB_NAME, args.testsetfile, devkit_path=args.devkit_path)
+    # imdb.competition_mode(args.comp_mode)
+    # if not cfg.TEST.HAS_RPN:
+    #     imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
+    #
+    # test_net(net, imdb, args.annopath, args.output_dir, max_per_image=args.max_per_image, vis=args.vis)
