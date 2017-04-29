@@ -319,6 +319,9 @@ if __name__ == '__main__':
 
     net = caffe.Net(prototxt, latest_model, caffe.TEST)
 
+    if not os.path.exists(EVAL_PATH):
+        os.makedirs(EVAL_PATH)
+
     imdb = tpod(EVAL_PATH)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
     imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
