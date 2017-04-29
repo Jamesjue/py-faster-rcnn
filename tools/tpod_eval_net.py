@@ -17,7 +17,7 @@ matplotlib.use('Agg')
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
 from fast_rcnn.test import im_detect
 from datasets.factory import get_imdb
-from datasets.tpod import tpod
+from datasets.tpod_dataset import tpod
 import caffe
 import pprint
 import time, os, sys
@@ -31,6 +31,8 @@ from fast_rcnn.nms_wrapper import nms
 import cPickle
 from utils.blob import im_list_to_blob
 import pdb
+
+EVAL_PATH = '/eval/'
 
 
 def parse_args():
@@ -82,6 +84,8 @@ def parse_args():
                         help='the name of the train image set and label set file name, '
                              'since they have same name under different directories',
                         default=0, type=int)
+    parser.add_argument('--comp', dest='comp_mode', help='competition mode',
+                        action='store_true')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -235,6 +239,25 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     latest_model = get_latest_model_name()
+    print 'get latest model: %s ' % str(latest_model)
+
+    prototxt = '/py-faster-rcnn/assembled_end2end/faster_rcnn_test.pt'
+
+    net = caffe.Net(prototxt, latest_model, caffe.TEST)
+
+    imdb = tpod(EVAL_PATH)
+    print 'Loaded dataset `{:s}` for training'.format(imdb.name)
+    imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
+    print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
+    imdb.competition_mode(args.comp_mode)
+
+    # imdb = get_imdb(tpod.TPOD_IMDB_NAME, args.testsetfile, devkit_path=args.devkit_path)
+    # imdb.competition_mode(args.comp_mode)
+    # if not cfg.TEST.HAS_RPN:
+    #     imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
+    #
+    # test_net(net, imdb, args.annopath, args.output_dir, max_per_image=args.max_per_image, vis=args.vis)
+
 
     # # testsetfile should be a filename (without extension) in devkit_path that contains
     # # a list of image paths
