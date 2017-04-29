@@ -141,7 +141,7 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
             # class index should minus one, since it include background
             for label in annotation_list_array[i][class_index - 1]:
                 obj_struct = {}
-                obj_struct['name'] = items[classname]
+                obj_struct['name'] = classname
                 x1 = float(label[0])
                 y1 = float(label[1])
                 w = float(label[2])
