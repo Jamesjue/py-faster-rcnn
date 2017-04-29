@@ -108,29 +108,6 @@ def parse_args():
     return args
 
 
-#def combined_roidb(imdb_names, image_set, devkit_path):
-#    def get_roidb(imdb_name, image_set, devkit_path):
-#        imdb = get_imdb(imdb_name, image_set, devkit_path)
-#        print 'Loaded dataset `{:s}` for training'.format(imdb.name)
-#        imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
-#        print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
-#        roidb = get_training_roidb(imdb)
-#        return roidb
-#
-#    roidbs = [get_roidb(s, image_set=image_set, devkit_path=devkit_path)
-#              for s in imdb_names.split('+')]
-#    roidb = roidbs[0]
-#    if len(roidbs) > 1:
-#        print('multiple imdb')
-#        for r in roidbs[1:]:
-#            roidb.extend(r)
-#        imdb = datasets.imdb.imdb(imdb_names)
-#    else:
-#        print('single imdb')
-#        imdb = get_imdb(imdb_names, image_set, devkit_path)
-#    return imdb, roidb
-
-
 def combined_roidb(devkit_path):
     # we assume that there is only one imdb
     imdb = tpod(devkit_path)
@@ -251,57 +228,4 @@ if __name__ == '__main__':
              pretrained_model=args.pretrained_model,
              max_iters=args.max_iters)
 
-'''
-def train_net(solver_prototxt, roidb, output_dir,
-              pretrained_model=None, max_iters=40000):
-'''
 
-'''
-Necessary parameters
-cfg file
-gpu
-imdb, roidb
-output_dir
-
-'''
-
-#    args.imdb_name=tpod.TPOD_IMDB_NAME
-#
-#    if args.cfg_file is not None:
-#        cfg_from_file(args.cfg_file)
-#    if args.set_cfgs is not None:
-#        cfg_from_list(args.set_cfgs)
-#
-#    assert (args.image_set is not None)
-#    assert (args.devkit_path is not None)
-#    assert (args.output_dir is not None)
-#    args.image_set = os.path.abspath(args.image_set)
-#    args.devkit_path = os.path.abspath(args.devkit_path)
-#    args.output_dir = os.path.abspath(args.output_dir)
-#
-#    print('Called with args:')
-#    print(args)
-#
-#    cfg.GPU_ID = args.gpu_id
-#
-#    print('Using config:')
-#    pprint.pprint(cfg)
-#
-#    if not args.randomize:
-#        # fix the random seeds (numpy and caffe) for reproducibility
-#        np.random.seed(cfg.RNG_SEED)
-#        caffe.set_random_seed(cfg.RNG_SEED)
-#
-#    # set up caffe
-#    caffe.set_mode_gpu()
-#    caffe.set_device(args.gpu_id)
-#
-#    imdb, roidb = combined_roidb(args.imdb_name, args.image_set, args.devkit_path)
-#    print '{:d} roidb entries'.format(len(roidb))
-#
-#    output_dir = args.output_dir
-#    print 'Output will be saved to `{:s}`'.format(output_dir)
-#
-#    train_net(args.solver, roidb, output_dir,
-#              pretrained_model=args.pretrained_model,
-#              max_iters=args.max_iters)
