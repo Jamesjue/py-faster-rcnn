@@ -331,9 +331,9 @@ if __name__ == '__main__':
     target_image_list_path = EVAL_PATH + 'image_set.txt'
     target_label_list_path = EVAL_PATH + 'label_set.txt'
     target_label_name_path = EVAL_PATH + 'labels.txt'
-    shutil.copyfile(train_image_list_path, target_image_list_path)
-    shutil.copyfile(train_label_list_path, target_label_list_path)
-    shutil.copyfile(train_label_name_path, target_label_name_path)
+    shutil.copyfile(eval_image_list_path, target_image_list_path)
+    shutil.copyfile(eval_label_list_path, target_label_list_path)
+    shutil.copyfile(eval_label_name_path, target_label_name_path)
 
     imdb = tpod(EVAL_PATH)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
