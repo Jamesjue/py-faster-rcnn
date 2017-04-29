@@ -233,6 +233,8 @@ def eval_net(net, imdb, label_list_path, output_dir, max_per_image=100, thresh=0
     
         with open(det_file, 'wb') as f:
             cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
+    else:
+        all_boxes = cPickle.load(open(det_file, 'r'))
     
     print 'Evaluating detections'
     imdb.evaluate_detections(all_boxes, label_list_path, output_dir)

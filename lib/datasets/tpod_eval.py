@@ -197,6 +197,8 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
     image_ids = [x[0] for x in splitlines]
     confidence = np.array([float(x[1]) for x in splitlines])
     BB = np.array([[float(z) for z in x[2:]] for x in splitlines])
+    print 'BB shape %s ' % str(BB.shape)
+    print 'confidence shape %s ' % str(confidence.shape)
 
     # sort by confidence
     sorted_ind = np.argsort(-confidence)
@@ -251,6 +253,6 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
     # avoid divide by zero in case the first detection matches a difficult
     # ground truth
     prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
-    ap = voc_ap(rec, prec, use_07_metric)
+    ap = voc_ap(rec, prec)
 
     return rec, prec, ap
