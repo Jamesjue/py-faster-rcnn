@@ -342,7 +342,7 @@ if __name__ == '__main__':
     imdb.competition_mode(args.comp_mode)
 
     # begin evaluation
-    eval_net(net, imdb, label_list_path, args.output_dir, 100)
+    eval_net(net, imdb, eval_label_list_path, args.output_dir, 100)
 
     # imdb = get_imdb(tpod.TPOD_IMDB_NAME, args.testsetfile, devkit_path=args.devkit_path)
     # imdb.competition_mode(args.comp_mode)
