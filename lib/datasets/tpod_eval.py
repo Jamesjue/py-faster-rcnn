@@ -140,10 +140,7 @@ def voc_eval(detpath, class_index, image_list_array, annotation_list_array, clas
             objects = []
             # class index should minus one, since it include background
             for label in annotation_list_array[i][class_index - 1]:
-                items = each_anno.strip().split(' ')
                 obj_struct = {}
-                # if len(items) > 4:
-                # newer version of annotation, with last item as cls
                 obj_struct['name'] = items[classname]
                 x1 = float(label[0])
                 y1 = float(label[1])
