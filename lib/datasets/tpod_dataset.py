@@ -333,7 +333,7 @@ class tpod(imdb):
             os.mkdir(output_dir)
         folder_name = '/eval/' + evaluation_result_name
         if not os.path.exists(folder_name):
-            os.mkdirs(folder_name)
+            os.makedirs(folder_name)
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
