@@ -36,7 +36,7 @@ import tpod_utils
 import os, fnmatch
 import re
 
-EVAL_PATH = '/eval/'
+WORKING_PATH = '/work/'
 
 
 def parse_args():
@@ -322,21 +322,21 @@ if __name__ == '__main__':
     net = caffe.Net(prototxt, latest_model, caffe.TEST)
 
     # prepare data set
-    if not os.path.exists(EVAL_PATH):
-        os.makedirs(EVAL_PATH)
+    if not os.path.exists(WORKING_PATH):
+        os.makedirs(WORKING_PATH)
     else:
         # clear the folder
-        shutil.rmtree(EVAL_PATH)
-        os.makedirs(EVAL_PATH)
+        shutil.rmtree(WORKING_PATH)
+        os.makedirs(WORKING_PATH)
 
-    target_image_list_path = EVAL_PATH + 'image_set.txt'
-    target_label_list_path = EVAL_PATH + 'label_set.txt'
-    target_label_name_path = EVAL_PATH + 'labels.txt'
+    target_image_list_path = WORKING_PATH + 'image_set.txt'
+    target_label_list_path = WORKING_PATH + 'label_set.txt'
+    target_label_name_path = WORKING_PATH + 'labels.txt'
     shutil.copyfile(eval_image_list_path, target_image_list_path)
     shutil.copyfile(eval_label_list_path, target_label_list_path)
     shutil.copyfile(eval_label_name_path, target_label_name_path)
 
-    imdb = tpod(EVAL_PATH)
+    imdb = tpod(WORKING_PATH)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
     imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
     print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)

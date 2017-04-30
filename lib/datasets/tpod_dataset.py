@@ -334,6 +334,7 @@ class tpod(imdb):
         folder_name = '/eval/' + evaluation_result_name
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
+            print 'create result folder: %s ' % str(folder_name)
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
@@ -354,6 +355,7 @@ class tpod(imdb):
             file_name = folder_name + '/' + str(cls) + '.pkl'
             with open(file_name, 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+                print 'result saved: %s ' % str(file_name)
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         print('~~~~~~~~')
         print('Results:')
