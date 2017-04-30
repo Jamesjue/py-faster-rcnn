@@ -324,13 +324,16 @@ class tpod(imdb):
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
     # need customization
-    def _do_python_eval(self, annopath, output_dir, cachedir=None):
+    def _do_python_eval(self, annopath, output_dir, evaluation_result_name, cachedir=None):
         '''annopath = '/home/junjuew/object-detection-web/demo-web/train/headphone-model/Annotations/{}.txt'
         '''
         aps = []
         # The PASCAL VOC metric changed in 2010
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
+        folder_name = '/eval/' + evaluation_result_name
+        if not os.path.exists(folder_name):
+            os.mkdirs(folder_name)
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
@@ -346,6 +349,10 @@ class tpod(imdb):
             print('precision for {} = {}'.format(cls, prec))
             print('recall for {} = {}'.format(cls, rec))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
+                cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+            # store the result under the evaluation folder, each class with the class name as the file name
+            file_name = folder_name + '/' + str(cls) + '.pkl'
+            with open(file_name, 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         print('~~~~~~~~')
@@ -377,9 +384,9 @@ class tpod(imdb):
         print('Running:\n{}'.format(cmd))
         status = subprocess.call(cmd, shell=True)
 
-    def evaluate_detections(self, all_boxes, annopath, output_dir):
+    def evaluate_detections(self, all_boxes, annopath, output_dir, evaluation_result_name):
         self._write_voc_results_file(all_boxes, output_dir)
-        self._do_python_eval(annopath, output_dir)
+        self._do_python_eval(annopath, output_dir, evaluation_result_name)
         if self.config['matlab_eval']:
             self._do_matlab_eval(output_dir)
         if self.config['cleanup']:
