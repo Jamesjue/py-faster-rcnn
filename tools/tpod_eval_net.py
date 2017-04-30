@@ -278,7 +278,7 @@ if __name__ == '__main__':
     print 'Parameters: gpu %s, eval_set_name %s, output_dir %s' %\
     (str(args.gpu_id), str(args.eval_set_name), str(args.output_dir))
 
-    evaluation_result_name = args.evaluation_result_name
+    evaluation_result_name = args.eval_result_name
 
     # check evaluation set
     eval_image_list_path = ('/dataset/image_list/%s.txt' % str(args.eval_set_name))
