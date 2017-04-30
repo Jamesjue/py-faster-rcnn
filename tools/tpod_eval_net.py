@@ -88,8 +88,7 @@ def parse_args():
                         help='the name of the evaluation image set and label set file name, ',
                         default=0, type=int)
     parser.add_argument('--eval_result_name', dest='eval_result_name',
-                        help='the name of the evaluation result folder',
-                        default=0, type=int)
+                        help='the name of the evaluation result folder')
     parser.add_argument('--comp', dest='comp_mode', help='competition mode',
                         action='store_true')
 
