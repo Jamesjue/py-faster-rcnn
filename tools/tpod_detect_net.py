@@ -19,6 +19,7 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     print 'no matplotlib. output bounding box in text only'
+from flask import Blueprint, render_template, abort
 import _init_paths
 from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
@@ -41,7 +42,7 @@ from flask import request, url_for, jsonify, Response, send_file
 DEFAULT_CONFIDENCE = 0.6
 PATH_RESULT = '/output.png'
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
 
 
 def get_latest_model_name():
