@@ -41,7 +41,7 @@ from flask import request, url_for, jsonify, Response, send_file
 DEFAULT_CONFIDENCE = 0.6
 PATH_RESULT = '/output.png'
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 
 def get_latest_model_name():
@@ -76,6 +76,11 @@ cfg.GPU_ID = gpu_id
 net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 print '\n\nLoaded network {:s}'.format(caffemodel)
 classes = read_in_labels(labelfile)
+
+
+@app.route("/", methods=["GET"])
+def visual_classifier():
+    return render_template('index_visual.html')
 
 
 @app.route('/detect', methods=["POST"])
