@@ -42,7 +42,7 @@ from flask import request, url_for, jsonify, Response, send_file
 DEFAULT_CONFIDENCE = 0.6
 PATH_RESULT = '/output.png'
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', template_folder='/templates')
 
 
 def get_latest_model_name():

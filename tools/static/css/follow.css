@@ -1,0 +1,75 @@
+.follow-filter-container {
+  margin-top: 20px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: #404040;
+  height: 60px;
+  overflow: hidden;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.follow-filter-tab-container {
+  text-align: center;
+  overflow: hidden;
+  height: 60px;
+  float: left;
+}
+.follow-filter-tab-container:hover {
+  text-align: center;
+  overflow: hidden;
+  height: 60px;
+  float: left;
+  border-bottom: 5px solid #478cc9;
+}
+.follow-filter-text-number {
+  color: #404040;
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+.follow-filter-text-type {
+  color: #6A6A6A;
+  margin-top: 0px;
+  font-size: 13px;
+}
+#follow-list {
+  margin-top: 30px;
+  background: white;
+  border-radius: 5px;
+  padding-top: 10px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-bottom: 10px;
+  box-shadow: #000000;
+  min-height: 60%;
+}
+.follow-item {
+  display: block;
+  overflow: hidden;
+  border-bottom: 1px solid #D2D2D2;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.follow-avatar-container {
+  position: absolute;
+  float: left;
+  height: 50px;
+  width: 50px;
+  border-radius: 25px;
+  background: white;
+  margin-left: 0px;
+  margin-top: 0px;
+  overflow: hidden;
+}
+.follow-avatar {
+  height: 50px;
+  width: 50px;
+  border-radius: 25px;
+}
+.follow-author {
+  color: #404040;
+}
+.follow-content-container {
+  margin-left: 70px;
+  margin-top: 10px;
+  min-height: 50px;
+}

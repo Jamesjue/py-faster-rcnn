@@ -1,0 +1,169 @@
+@base-blue: blue;
+@shadow-black: black;
+
+
+#base{
+	width: 100%;
+	height: 100%;
+}
+
+.navbar{
+	background: @base-blue;
+	box-shadow: @shadow-black;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+
+.nav{
+	margin-left: 70px;
+}
+
+.nav-item{
+	background: rgba(0,0,0,0);
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.nav-item:hover{
+	background: rgba(0,0,0,0.1);
+	.nav-item
+}
+
+.navbar-light .navbar-nav .active{
+	background: rgba(0,0,0,0.1);
+	.nav-item
+}
+
+.navbar-light .navbar-nav .active>.nav-link{
+	color: white;
+}
+
+.navbar-light .navbar-nav .nav-link{
+	color: white;
+}
+
+#content{
+	padding-top: 70px;
+	background: rgba(0,0,0,0.1);
+}
+
+#section-left{
+	height: 100%;
+	text-align: center;
+	display: block;
+}
+
+#section-left-bg{
+	position: absolute;
+	margin-left: 0px;
+	margin-top: 0px;
+	height: 1000px;
+	width:100%;
+	-webkit-filter: blur(3px);
+	filter: blur(3px);
+	background-image: url("../img/cover-1.jpg");
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
+	display: block;
+}
+
+#section-left-container{
+	position: absolute;
+	margin-left: 0px;
+	margin-top: 0px;
+	padding-top: 30px;
+}
+
+#section-left-container>h3,h4,p,a{
+	color: white;
+}
+
+#section-right{
+	height: 1000px;
+}
+
+.img-avatar{
+	height: 72px;
+	width: 72px;
+	padding: 3px;
+	border-radius: 35px;
+	border-color: white;
+	border-width: 2px;
+	filter: blur(10px);
+}
+
+.feed-avatar{
+	height: 54px;
+	width: 54px;
+	padding: 2px;
+	border-radius: 4px;
+	background: white;
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+.feed-item{
+	display: block;
+	overflow: hidden;
+}
+
+.feed-avatar-container{
+	position: absolute;
+	float: left;
+	height: 50px;
+	width: 50px;
+	border-radius: 3px;
+	word-wrap: break-word;
+}
+
+.feed-avatar-img{
+	height: 50px;
+	width: 50px;
+	border-radius: 3px;
+	word-wrap: break-word;
+}
+
+.feed-content-container{
+	margin-left: 70px;
+	margin-top: 10px;
+	min-height: 100px;
+
+	.feed-time{
+		float: right;
+		display: inline-block;
+	}
+
+	.feed-third-line>*{
+		float:left;
+		margin-left: 10px;
+	}
+
+	.feed-img-fav{
+		width: 20px;
+		height: 20px;
+		margin-left: 0px;
+	}
+
+	.feed-img-reply{
+		width: 20px;
+		height: 20px;
+		margin-left: 20px;
+	}
+
+	.feed-img-container{
+		min-height: 100px;
+		max-height: 200px;
+		width: 200px;
+		overflow: hidden;
+	}
+
+	.feed-img-content{
+		width: 100%;
+	}
+
+}
+
+
+
+
