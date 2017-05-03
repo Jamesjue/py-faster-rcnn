@@ -35,6 +35,9 @@ from tpod_utils import read_in_labels
 import pdb
 import os, fnmatch
 import re
+from PIL import Image
+from io import BytesIO
+import base64
 
 from flask import Flask
 from flask import request, url_for, jsonify, Response, send_file
@@ -42,7 +45,7 @@ from flask import request, url_for, jsonify, Response, send_file
 DEFAULT_CONFIDENCE = 0.6
 PATH_RESULT = '/output.png'
 
-app = Flask(__name__, static_url_path='/static', template_folder='/templates')
+app = Flask(__name__, static_url_path='/static', template_folder='templates')
 
 
 def get_latest_model_name():
@@ -92,6 +95,9 @@ def detect():
     for k, v in request.files.items():
         uploaded_files.append(v)
     if len(uploaded_files) == 0:
+        if 'img' in request.form:
+            im = base64.b64decode(str(request.form['img']) + '=========================')
+            print 'get img %s ' % str(im)
         return Response('No file detected')
     print 'input images %s ' % str(uploaded_files)
     imgs =[]
