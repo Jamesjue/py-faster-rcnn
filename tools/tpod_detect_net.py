@@ -35,12 +35,10 @@ from tpod_utils import read_in_labels
 import pdb
 import os, fnmatch
 import re
-from PIL import Image
-from io import BytesIO
-import base64
 
 from flask import Flask
 from flask import request, url_for, jsonify, Response, send_file
+import base64
 
 DEFAULT_CONFIDENCE = 0.6
 PATH_RESULT = '/output.png'
@@ -87,20 +85,43 @@ def visual_classifier():
     return render_template('index_visual.html')
 
 
+def decode_base64(data):
+    """Decode base64, padding being optional.
+
+    :param data: Base64 data as an ASCII byte string
+    :returns: The decoded byte string.
+
+    """
+    data = re.search(r'base64,(.*)', data).group(1)
+    missing_padding = len(data) % 4
+    print data[:100]
+    if missing_padding != 0:
+        data += b'='* (4 - missing_padding)
+    ret = base64.decodestring(data)
+    fh = open('/tmp/temp.png', 'wb')
+    fh.write(ret)
+    fh.close()
+    img = cv2.imread('/tmp/temp.png')
+    print img.shape
+    return img
+
+
 @app.route('/detect', methods=["POST"])
 def detect():
     # read the file
     print 'requested files %s ' % str(request.files)
     uploaded_files = []
+    parameter_img = None
     for k, v in request.files.items():
         uploaded_files.append(v)
     if len(uploaded_files) == 0:
         if 'img' in request.form:
-            im = base64.b64decode(str(request.form['img']) + '=========================')
-            print 'get img %s ' % str(im)
-        return Response('No file detected')
+            parameter_img = decode_base64(request.form['img'])
+        if parameter_img is None:
+            return Response('No file detected')
     print 'input images %s ' % str(uploaded_files)
     imgs =[]
+    imgs.append(parameter_img)
     for img_file in uploaded_files:
         img_file.save(img_file.filename)
         print 'saved file %s ' % str(img_file.filename)

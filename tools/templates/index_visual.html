@@ -23,15 +23,10 @@ The Image
 <br/>
 
 
-<form id="form_detect" action="create_test" method="POST"
+<form id="form_detect" action="detect" method="POST"
       enctype="multipart/form-data">
-    <input hidden name="long_running" value="false">
-    <input hidden name="format" value="img">
-    <div class="form-group form-inline">
-        <input id="confidence" type="number" name="confidence" step="0.01"
-               class="form-control time_remains"
-               value="0.5"><br>
-    </div>
+    <input hidden name="confidence" value="0.2">
+    <input hidden name="format" value="box">
     <input id="image_upload" type="file" name="detect_file" multiple class="form-control">
 </form>
 
@@ -59,16 +54,19 @@ The Image
         var dataURL = thecanvas.toDataURL();
         // set the source of the img tag
         img.setAttribute('src', dataURL);
+        
+        var upload_img = $('#image_upload');
+        upload_img.attr('src', dataURL);
 
         //begin request
         $.ajax({
             type: 'POST',
             url: 'detect',
             data:{
-                confidence: '0.5',
+                confidence: '0.3',
                 format: 'box',
                 img: dataURL,
-            }
+            } 
         }).done(function(data){
             console.log('request result ' + data)
         })
