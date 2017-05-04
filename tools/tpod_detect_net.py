@@ -85,6 +85,11 @@ def visual_classifier():
     return render_template('index_visual.html')
 
 
+@app.route("/result", methods=["GET", "POST"])
+def result():
+    return send_file(PATH_RESULT)
+
+
 def decode_base64(data):
     """Decode base64, padding being optional.
 
@@ -121,7 +126,8 @@ def detect():
             return Response('No file detected')
     print 'input images %s ' % str(uploaded_files)
     imgs =[]
-    imgs.append(parameter_img)
+    if parameter_img is not None:
+        imgs.append(parameter_img)
     for img_file in uploaded_files:
         img_file.save(img_file.filename)
         print 'saved file %s ' % str(img_file.filename)

@@ -46,6 +46,10 @@ The Image
     };
 
     function draw(video, thecanvas, img) {
+        thecanvas.width = video.videoWidth;
+        thecanvas.height = video.videoHeight;
+
+
         // get the canvas context for drawing
         var context = thecanvas.getContext('2d');
         // draw the video contents into the canvas x, y, width, height
@@ -53,22 +57,24 @@ The Image
         // get the image data from the canvas object
         var dataURL = thecanvas.toDataURL();
         // set the source of the img tag
-        img.setAttribute('src', dataURL);
+        // img.setAttribute('src', dataURL);
         
-        var upload_img = $('#image_upload');
-        upload_img.attr('src', dataURL);
+        //var upload_img = $('#image_upload');
+        //upload_img.attr('src', dataURL);
 
         //begin request
         $.ajax({
             type: 'POST',
             url: 'detect',
             data:{
-                confidence: '0.3',
-                format: 'box',
+                confidence: '0.1',
+                format: 'img',
                 img: dataURL,
             } 
         }).done(function(data){
-            console.log('request result ' + data)
+            console.log(data.length);
+            img.setAttribute('src', data );
+            //console.log('request result ' + data)
         })
     }
 
@@ -99,4 +105,11 @@ The Image
     var inputNode = document.querySelector('input')
     inputNode.addEventListener('change', playSelectedFile, false)
 </script>
+<style>
+canvas {
+    height: 720px;
+    width: 1280px;
+}  
+
+</style>
 </html>
