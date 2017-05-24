@@ -4,37 +4,39 @@
 # Written by Bharath Hariharan
 # --------------------------------------------------------
 
-#import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
 import os
 import cPickle
 import numpy as np
 import pdb
 
+
 def parse_rec(filename):
     """ Parse a tpod annotation txt file """
-    objects = []    
+    objects = []
     with open(filename, 'r') as f:
-        annos=f.read().splitlines()
+        annos = f.read().splitlines()
         for each_anno in annos:
-            items=each_anno.strip().split(' ')
-            obj_struct = {}            
+            items = each_anno.strip().split(' ')
+            obj_struct = {}
             if len(items) > 4:
                 # newer version of annotation, with last item as cls
                 obj_struct['name'] = items[-1]
             else:
                 # older version of annotation, single class model, no cls name
                 obj_struct['name'] = ''
-                
+
             # lable all as not difficult
             # obj_struct bbox is using xtl, ytl, xbr, ybr
             # however, tpod stores bx as xtl,ytl,w,h
             obj_struct['difficult'] = 0
             obj_struct['bbox'] = [int(items[0]),
                                   int(items[1]),
-                                  int(items[0])+int(items[2]),
-                                  int(items[1])+int(items[3])]
+                                  int(items[0]) + int(items[2]),
+                                  int(items[1]) + int(items[3])]
             objects.append(obj_struct)
     return objects
+
 
 def voc_ap(rec, prec, use_07_metric=False):
     """ ap = voc_ap(rec, prec, [use_07_metric])
@@ -69,6 +71,7 @@ def voc_ap(rec, prec, use_07_metric=False):
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
+
 # sample detpath.format(classname) detection file (text file)  # format: image_id, confidence, xtl, ytl, xbr, ybr, label
 # 1 1.000 132.3 94.6 457.8 339.2
 # 2 1.000 111.0 81.0 433.7 326.0
@@ -85,14 +88,8 @@ def voc_ap(rec, prec, use_07_metric=False):
 # 4 /home/junjuew/object-detection-web/demo-web/vatic/videos/headphone3.mp4/0/0/3.jpg
 # 5 /home/junjuew/object-detection-web/demo-web/vatic/videos/headphone3.mp4/0/0/4.jpg
 # 6 /home/junjuew/object-detection-web/demo-web/vatic/videos/headphone3.mp4/0/0/5.jpg
-    
-def voc_eval(detpath,
-             annopath,
-             imagesetfile,
-             classname,
-             cachedir,
-             ovthresh=0.5,
-             use_07_metric=False):
+
+def voc_eval(detpath, class_index, image_list_array, annotation_list_array, classname, cachedir, ovthresh=0.5):
     """rec, prec, ap = voc_eval(detpath,
                                 annopath,
                                 imagesetfile,
@@ -119,16 +116,16 @@ def voc_eval(detpath,
     # cachedir caches the annotations in a pickle file
 
     # first load gt
-    cachefile=None
+    cachefile = None
     if cachedir != None:
         if not os.path.isdir(cachedir):
             os.mkdir(cachedir)
         cachefile = os.path.join(cachedir, 'annots.pkl')
-    
-    # read list of images
-    with open(imagesetfile, 'r') as f:
-        lines = f.readlines()
-    imagenames = [x.strip().split(' ')[0] for x in lines]
+
+    # # read list of images
+    # with open(imagesetfile, 'r') as f:
+    #     lines = f.readlines()
+    # imagenames = [x.strip().split(' ')[0] for x in lines]
 
     if cachefile and os.path.isfile(cachefile):
         # load
@@ -137,11 +134,37 @@ def voc_eval(detpath,
     else:
         # load annots
         recs = {}
-        for i, imagename in enumerate(imagenames):
-            recs[imagename] = parse_rec(annopath.format(imagename))
+        for i, imagename in enumerate(image_list_array):
+            # load annotation for that frame
+            imagename = imagename[0]
+
+            objects = []
+            # class index should minus one, since it include background
+            for label in annotation_list_array[i][class_index - 1]:
+                obj_struct = {}
+                obj_struct['name'] = classname
+                x1 = float(label[0])
+                y1 = float(label[1])
+                w = float(label[2])
+                h = float(label[3])
+                x2 = x1 + w
+                y2 = y1 + h
+                # else:
+                #     # older version of annotation, single class model, no cls name
+                #     obj_struct['name'] = ''
+                # lable all as not difficult
+                # obj_struct bbox is using xtl, ytl, xbr, ybr
+                # however, tpod stores bx as xtl,ytl,w,h
+                obj_struct['difficult'] = 0
+                obj_struct['bbox'] = [x1,y1,x2, y2]
+                objects.append(obj_struct)
+
+            print imagename
+            recs[imagename] = objects
+
             if i % 100 == 0:
                 print 'Reading annotation for {:d}/{:d}'.format(
-                    i + 1, len(imagenames))
+                    i + 1, len(imagename))
         if cachefile:
             # save
             print 'Saving cached annotations to {:s}'.format(cachefile)
@@ -151,11 +174,12 @@ def voc_eval(detpath,
     # extract gt objects for this class
     class_recs = {}
     npos = 0
-    for imagename in imagenames:
+    for imagename in image_list_array:
+        imagename = imagename[0]
         # TODO: for backward compatibility only. need a solution for it
         # 'object'==classname is there for models that doesn't have label.txt in their
         # train dir
-        R = [obj for obj in recs[imagename] if obj['name'] == classname or obj['name'] == '' or 'object'==classname]
+        R = [obj for obj in recs[imagename] if obj['name'] == classname or obj['name'] == '' or 'object' == classname]
         bbox = np.array([x['bbox'] for x in R])
         difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
         det = [False] * len(R)
@@ -173,6 +197,8 @@ def voc_eval(detpath,
     image_ids = [x[0] for x in splitlines]
     confidence = np.array([float(x[1]) for x in splitlines])
     BB = np.array([[float(z) for z in x[2:]] for x in splitlines])
+    print 'BB shape %s ' % str(BB.shape)
+    print 'confidence shape %s ' % str(confidence.shape)
 
     # sort by confidence
     sorted_ind = np.argsort(-confidence)
@@ -227,6 +253,6 @@ def voc_eval(detpath,
     # avoid divide by zero in case the first detection matches a difficult
     # ground truth
     prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
-    ap = voc_ap(rec, prec, use_07_metric)
+    ap = voc_ap(rec, prec)
 
     return rec, prec, ap

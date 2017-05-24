@@ -38,38 +38,36 @@ training phase, we only need to read the array
 class tpod(imdb):
     TPOD_IMDB_NAME='web_demo'
 
-    def __init__(self, image_set, devkit_path):
+    def __init__(self, devkit_path):
         # image_set should be a filename (without extension) in devkit_path that contains# a list of image paths
         # devkit_path should have an annotation dir, a label text
         imdb.__init__(self, self.__class__.TPOD_IMDB_NAME)
         self._year = '2016'
 
-        if not image_set or not devkit_path or not os.path.isdir(devkit_path):
+        if not devkit_path or not os.path.isdir(devkit_path):
             raise ValueError('Please provide image_set and devkit_path for tpod imdb. The devkit_path should contain '
                              'a text file with all labels named "label.txt". devkit_path/image_set.txt should be '
                              'a text file that each line is an absolute path to an image\n '
-                             'Current image_set: {} devkit_path: {}'.format(image_set, devkit_path))
-            
-        self._image_set = image_set
+                             'Current devkit_path: {}'.format(devkit_path))
+
+        self._image_set = 'train'
         self._devkit_path = devkit_path
+
         self._label_path = os.path.join(self._devkit_path, 'labels.txt')
+        self._label_set_path = os.path.join(self._devkit_path, 'label_set.txt')
+        self._image_set_path = os.path.join(self._devkit_path, 'image_set.txt')
 
         # load classes names
         if os.path.isfile(self._label_path):
-            labels=[]
-            with open(self._label_path, 'r') as f:
-                labels=f.read().splitlines()
-            labels.insert(0, '__background__')
-            print 'custom labels: {}'.format(labels)
-            self._classes = (labels)
+            self._classes = self.load_label_classes()
         else:
             print 'no label file given, model is single class'
             # backward compatibility, single class
             self._classes = ('__background__', # always index 0
                              'object')
 
-        self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_index = self._load_image_set_index()
+        self._annotation_index, self._obj_num_index = self._load_annotations()
 
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
@@ -83,34 +81,66 @@ class tpod(imdb):
                        'matlab_eval' : False,
                        'rpn_file'    : None,
                        'min_size'    : 2}
-        print 'initialized imdb from devkit_path: {}, image_set: {}'.format(self._devkit_path, self._image_set) 
+        print 'initialized imdb from devkit_path: {}, image_set: {}'.format(self._devkit_path, self._image_set)
+
+    def load_label_classes(self):
+        f = open(self._label_path, 'r')
+        labels = f.read().splitlines()
+        labels.insert(0, '__background__')
+        print 'custom labels: {}'.format(labels)
+        return labels
 
     # need customization
     def _is_test(self):
-        return ('test' in self._image_set)
+        return False
 
     # need customization
     def _load_image_set_index(self):
         """
         Load the indexes listed in this dataset's image set file.
         # Example path to image set file:
-        # self._devkit_path + /test.txt
-        # self._devkit_path + /train.txt
+        # self._devkit_path + /image_set.txt
         """
-        image_set_file = os.path.join(self._devkit_path,
-                                      self._image_set + '.txt')
-        assert os.path.exists(image_set_file), \
-                'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip().split() for x in f.readlines()]
-        return image_index
+        f = open(self._image_set_path, 'r')
+        # at the same time remove the empty space at the beginning and end
+        image_paths = [x.strip().split() for x in f.readlines()]
+        return image_paths
+
+    def _load_annotations(self):
+        # the basic structure: class is separated by '.' label is separated by ';' coordination is separated by ','
+        f = open(self._label_set_path, 'r')
+        lines = f.readlines()
+        annotation_set = []
+        object_num_set = []
+        for line in lines:
+            obj_num = 0
+            line_classes = line.split('.')
+            line_annotation = []
+            for i, line_class in enumerate(line_classes):
+                # there might be extra separation symbol,
+                # we should ignore these more than actual classes
+                if i >= len(self._classes) - 1:
+                    break
+                line_label = []
+                if len(line_class) > 1:
+                    labels = line_class.split(';')
+                    for label in labels:
+                        if len(label) < 1:
+                            continue
+                        coordination = label.split(',')
+                        line_label.append(coordination)
+                        obj_num += 1
+                line_annotation.append(line_label)
+            annotation_set.append(line_annotation)
+            object_num_set.append(obj_num)
+        return annotation_set, object_num_set
 
     # need customization
     def image_path_at(self, i):
         """
         Return the absolute path to image i in the image sequence.
         """
-        image_path = self._image_index[i][1]
+        image_path = '/' + self._image_index[i][-1]
         assert os.path.exists(image_path), \
                 'Path does not exist: {}'.format(image_path)
         return image_path
@@ -121,12 +151,12 @@ class tpod(imdb):
         Load image and bounding boxes info from XML file in the PASCAL VOC
         format.
         """
-        filename = os.path.join(self._devkit_path, 'Annotations', index[0] + '.txt')
-        print 'Loading: {}'.format(filename)
-        import re
-        with open(filename) as f:
-            objs = [x.strip() for x in f.readlines()]
-        num_objs = len(objs)
+        index = int(index)
+        frame_label = self._annotation_index[index]
+        # we should include the background inside
+        num_objs = self._obj_num_index[index] 
+
+        # print 'load tpod annotation %s num objs %s ' % (str(index), str(num_objs))
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
@@ -142,23 +172,27 @@ class tpod(imdb):
         # seg_areas: a n length array, each element is the area size for that object
 
         # Load object bounding boxes into a data frame.
-        # sample entry: 319 61 275 159 apple
-        for ix, obj in enumerate(objs):
-            # Make pixel indexes 0-based
-            coor = re.findall('\d+', obj)
 
-            x1 = float(coor[0])
-            y1 = float(coor[1])
-            w = float(coor[2])
-            h = float(coor[3])
-            x2 = x1 + w
-            y2 = y1 + h
-            # j: class is the last word in an entry separated by white space
-            cls = self._class_to_ind[str(obj.split(' ')[-1])]
-            boxes[ix, :] = [x1, y1, x2, y2]
-            gt_classes[ix] = cls
-            overlaps[ix, cls] = 1.0
-            seg_areas[ix] = w * h
+        idx = 0
+        for i, current_class in enumerate(frame_label):
+            if len(current_class) > 0 and i < self.num_classes:
+                for label in current_class:
+                    if len(label) > 0:
+                        x1 = float(label[0])
+                        y1 = float(label[1])
+                        w = float(label[2])
+                        h = float(label[3])
+
+                        x2 = x1 + w
+                        y2 = y1 + h
+                        # j: class is the last word in an entry separated by white space
+                        cls = i + 1
+                        boxes[idx, :] = [x1, y1, x2, y2]
+                        gt_classes[idx] = cls
+                        overlaps[idx, cls] = 1.0
+                        seg_areas[idx] = w * h
+
+                        idx += 1
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
@@ -186,7 +220,7 @@ class tpod(imdb):
             return roidb
 
         gt_roidb = [self._load_tpod_annotation(index)
-                    for index in self.image_index]
+                    for index, path in enumerate(self.image_index)]
         with open(cache_file, 'wb') as fid:
             cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote gt roidb to {}'.format(cache_file)
@@ -223,7 +257,7 @@ class tpod(imdb):
 
     def rpn_roidb(self):
         print 'rpn_roidb called'
-        if not self._is_test():        
+        if not self._is_test():
             gt_roidb = self.gt_roidb()
             rpn_roidb = self._load_rpn_roidb(gt_roidb)
             roidb = imdb.merge_roidbs(gt_roidb, rpn_roidb)
@@ -234,7 +268,7 @@ class tpod(imdb):
 
     def _load_rpn_roidb(self, gt_roidb):
         filename = self.config['rpn_file']
-        print '_load_rpn_roidb called'        
+        print '_load_rpn_roidb called'
         print 'loading {}'.format(filename)
         assert os.path.exists(filename), \
                'rpn data not found at: {}'.format(filename)
@@ -275,8 +309,8 @@ class tpod(imdb):
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
-            filename = self._get_voc_results_file_template(output_dir).format(cls)       
-            print 'Writing {} VOC results file ==> {}'.format(cls, filename)            
+            filename = self._get_voc_results_file_template(output_dir).format(cls)
+            print 'Writing {} VOC results file ==> {}'.format(cls, filename)
             with open(filename, 'wt') as f:
                 for im_ind, index in enumerate(self.image_index):
                     dets = all_boxes[cls_ind][im_ind]
@@ -290,32 +324,38 @@ class tpod(imdb):
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
     # need customization
-    def _do_python_eval(self, annopath, output_dir, cachedir=None):
+    def _do_python_eval(self, annopath, output_dir, evaluation_result_name, cachedir=None):
         '''annopath = '/home/junjuew/object-detection-web/demo-web/train/headphone-model/Annotations/{}.txt'
         '''
-        imagesetfile = os.path.join(
-            self._devkit_path,
-            self._image_set + '.txt')
-
         aps = []
         # The PASCAL VOC metric changed in 2010
-        use_07_metric = True if int(self._year) < 2010 else False
-        print 'VOC07 metric? ' + ('Yes' if use_07_metric else 'No')
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
+        folder_name = '/eval/' + evaluation_result_name
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+            print 'create result folder: %s ' % str(folder_name)
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
             filename = self._get_voc_results_file_template(output_dir).format(cls)
+
+            image_path_array = self._image_index
+            annotation_path_array = self._annotation_index
+
             rec, prec, ap = voc_eval(
-                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.5,
-                use_07_metric=use_07_metric)
+                filename, i,  image_path_array, annotation_path_array, cls, cachedir, ovthresh=0.5)
             aps += [ap]
             print('AP for {} = {:.4f}'.format(cls, ap))
             print('precision for {} = {}'.format(cls, prec))
-            print('recall for {} = {}'.format(cls, rec))            
+            print('recall for {} = {}'.format(cls, rec))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+            # store the result under the evaluation folder, each class with the class name as the file name
+            file_name = folder_name + '/' + str(cls) + '.pkl'
+            with open(file_name, 'w') as f:
+                cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+                print 'result saved: %s ' % str(file_name)
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         print('~~~~~~~~')
         print('Results:')
@@ -346,9 +386,9 @@ class tpod(imdb):
         print('Running:\n{}'.format(cmd))
         status = subprocess.call(cmd, shell=True)
 
-    def evaluate_detections(self, all_boxes, annopath, output_dir):
+    def evaluate_detections(self, all_boxes, annopath, output_dir, evaluation_result_name):
         self._write_voc_results_file(all_boxes, output_dir)
-        self._do_python_eval(annopath, output_dir)
+        self._do_python_eval(annopath, output_dir, evaluation_result_name)
         if self.config['matlab_eval']:
             self._do_matlab_eval(output_dir)
         if self.config['cleanup']:
@@ -371,3 +411,4 @@ if __name__ == '__main__':
     d = tpod('trainval', '')
     res = d.roidb
     from IPython import embed; embed()
+

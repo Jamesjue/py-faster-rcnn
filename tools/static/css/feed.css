@@ -1,0 +1,220 @@
+.feed-post-photo {
+  height: 34px;
+  width: 240px;
+  border-radius: 5px;
+  float: left;
+  margin-top: 6px;
+  cursor: pointer;
+}
+.feed-post-container {
+  margin-top: 20px;
+  overflow: hidden;
+}
+.feed-post-button {
+  margin-top: 10px;
+  height: 30px;
+  float: right;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.feed-filter-container {
+  margin-top: 20px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: #404040;
+  height: 60px;
+  overflow: hidden;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.feed-filter-tab-container {
+  text-align: center;
+  overflow: hidden;
+  height: 60px;
+  float: left;
+}
+.feed-filter-tab-container:hover {
+  text-align: center;
+  overflow: hidden;
+  height: 60px;
+  float: left;
+  border-bottom: 5px solid #478cc9;
+}
+.feed-filter-text-number {
+  color: #404040;
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+.feed-filter-text-type {
+  color: #6A6A6A;
+  margin-top: 0px;
+  font-size: 13px;
+}
+#feed-list {
+  margin-top: 30px;
+  background: white;
+  border-radius: 5px;
+  padding-top: 10px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-bottom: 10px;
+  box-shadow: #000000;
+  min-height: 60%;
+}
+.feed-item {
+  display: block;
+  overflow: hidden;
+  border-bottom: 1px solid #D2D2D2;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.feed-avatar-container {
+  position: absolute;
+  float: left;
+  height: 50px;
+  width: 50px;
+  border-radius: 25px;
+  background: white;
+  margin-left: 0px;
+  margin-top: 0px;
+  overflow: hidden;
+}
+.feed-avatar {
+  height: 50px;
+  width: 50px;
+  border-radius: 25px;
+}
+.feed-author {
+  color: #404040;
+}
+.feed-content-container {
+  margin-left: 70px;
+  margin-top: 10px;
+  min-height: 100px;
+}
+.feed-content-text {
+  color: #6A6A6A;
+  margin-top: 4px;
+}
+.feed-time {
+  float: right;
+  display: inline-block;
+  color: #6A6A6A;
+}
+.feed-text-indicator-like {
+  color: #6A6A6A;
+}
+.feed-text-indicator-dislike {
+  color: #6A6A6A;
+}
+.feed-text-indicator-comment {
+  color: #6A6A6A;
+}
+.feed-third-line {
+  margin-top: 16px;
+}
+.feed-third-line > * {
+  float: left;
+  margin-left: 10px;
+}
+.feed-img-comment {
+  width: 16px;
+  height: 16px;
+  margin-left: 0px;
+  background-image: url("../img/feed-like.png");
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-image: url("../img/feed-comment.png");
+  margin-top: 4px;
+}
+.feed-img-like {
+  width: 16px;
+  height: 16px;
+  margin-left: 0px;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  margin-top: 4px;
+  background-image: url("../img/feed-like.png");
+  cursor: pointer;
+  margin-left: 20px;
+}
+.feed-img-dislike {
+  width: 16px;
+  height: 16px;
+  margin-left: 0px;
+  background-image: url("../img/feed-like.png");
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  margin-top: 4px;
+  margin-left: 20px;
+  background-image: url("../img/feed-dislike.png");
+  cursor: pointer;
+}
+.feed-img-container {
+  min-height: 100px;
+  max-height: 200px;
+  width: 200px;
+  overflow: hidden;
+  margin-top: 10px;
+  border-radius: 5px;
+  display: block;
+}
+.feed-img-content {
+  width: 100%;
+}
+.feed-item-template-img {
+  display: none;
+}
+.feed-item-template-text {
+  display: none;
+}
+.feed-comment-form {
+  clear: both;
+  margin-bottom: 10px;
+}
+.feed-item-comment {
+  height: 30px;
+  padding-top: 4px;
+}
+.feed-comment-item {
+  clear: both;
+}
+.feed-comment-list {
+  clear: both;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding-left: 0px;
+  list-style-type: none;
+}
+.feed-comment-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+}
+.feed-comment-avatar-container {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  float: left;
+}
+.feed-comment-content {
+  float: left;
+  margin-left: 10px;
+  color: #6A6A6A;
+}
+.feed-comment-item-template {
+  display: none;
+}
+.feed-comment-trigger {
+  width: 100px;
+  height: 20px;
+  font-size: 10px;
+  clear: both;
+  padding: 0px;
+  display: block;
+}
+.feed-comment-time {
+  margin-right: 10px;
+  color: #6A6A6A;
+  float: right;
+}

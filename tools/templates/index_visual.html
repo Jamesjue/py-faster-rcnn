@@ -1,0 +1,157 @@
+<html>
+<head>
+    <title>Visualize the Detection</title>
+    <script src="static/js/jquery-3.1.0.min.js"></script>
+</head>
+<body>
+Choose the Video (mp4) and display, we will display the detection result
+<br/>
+<div id="video_holder"> 
+    <div class="item" id="message"></div>
+    <input  class="item" type="file" accept="video/*"/>
+    <video  class="item" id="my_video" controls>
+    
+    </video>
+</div> 
+<br/>
+Detection Result:
+<br/>
+<canvas id="canvas_display">
+</canvas>
+</body>
+<script type='text/javascript'>
+
+    window.onload = function () {
+
+        var video = document.getElementById('my_video');
+        var canvas_display = document.getElementById('canvas_display');
+        var img = document.getElementById('thumbnail_img');
+
+        video.addEventListener('timeupdate', function () {
+            draw(video, canvas_display, img);
+        });
+    };
+
+    function normalize(box, width, height, new_width, new_height ){
+        var arr = [];
+        arr.push(box[0]/width * new_width) 
+        arr.push(box[1]/height * new_height) 
+        arr.push(box[2]/width * new_width) 
+        arr.push(box[3]/height * new_height) 
+       return arr;
+    }
+    // get the canvas context for drawing
+    var context_display = canvas_display.getContext('2d');
+    
+    function capture_frame(video){
+        var canvas = document.createElement("CANVAS");
+        canvas.width = 640;
+        canvas.height = 480;
+        var prevData = canvas.toDataURL();
+        var context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var frameData = canvas.toDataURL();
+        var image = new Image();
+        image.onload = function(){
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        }
+        image.src = prevData;
+        return frameData;
+    }
+
+    function draw(video, canvas_display, img) {
+        // draw the video contents into the canvas x, y, width, height
+        var width = canvas_display.width;
+        var height = canvas_display.height;
+
+        var frameData = capture_frame(video);
+        // console.log("first length " + dataURL.length + " second length " + frameData.length)
+        // set the source of the img tag
+        
+        //begin request
+        $.ajax({
+            type: 'POST',
+            url: 'detect',
+            data:{
+                confidence: '0.1',
+                format: 'box',
+                img: frameData,
+            } 
+        }).done(function(data){
+            var data = data.replace(/\(/g, '[').replace(/\)/g, ']').replace(/\'/g, '"');
+            var arr = JSON.parse(data);
+            console.log("get detection array of length " + arr.length);
+            data = "" + data;
+            var image = new Image();
+            image.onload = function(){
+                context_display.drawImage(image, 0, 0, canvas_display.width, canvas_display.height);
+                for(var i = 0; i < arr.length; i++){
+                    var detect = arr[i];
+                    var name = detect[0];
+                    var box = detect[1];
+                    box = normalize(box, 640, 480, width, height );
+                    var l = box[0];
+                    var t = box[1];
+                    var w = box[2] - box[0];
+                    var h = box[3] - box[1];
+                    context_display.beginPath();
+                    context_display.lineWidth = "3";
+                    context_display.strokeStyle = "red";
+                    context_display.rect(l, t, w, h);
+                    context_display.stroke();
+                    context_display.fillText(name, l, t - 10)
+                    console.log("draw rect " + box);
+                }
+            }
+            image.src = frameData;
+            console.log("receive result " + data);
+        })
+    }
+
+
+    var URL = window.URL || window.webkitURL
+    var displayMessage = function (message, isError) {
+        var element = document.querySelector('#message')
+        element.innerHTML = message
+        element.className = isError ? 'error' : 'info'
+    }
+    var playSelectedFile = function (event) {
+        var file = this.files[0]
+        var type = file.type
+        var videoNode = document.querySelector('video')
+        var canPlay = videoNode.canPlayType(type)
+        if (canPlay === '') canPlay = 'no'
+        var message = 'Can play type "' + type + '": ' + canPlay
+        var isError = canPlay === 'no'
+        displayMessage(message, isError)
+
+        if (isError) {
+            return
+        }
+
+        var fileURL = URL.createObjectURL(file)
+        videoNode.src = fileURL
+    }
+    var inputNode = document.querySelector('input')
+    inputNode.addEventListener('change', playSelectedFile, false)
+</script>
+<style>
+video {
+    height: 240px;
+    width: 320px;
+}  
+
+canvas {
+    height: 480px;
+    width: 640px;
+}  
+
+#video_holder{
+    width: 100%;
+}
+.item{
+    float: left;
+    width: 100%;
+}
+</style>
+</html>

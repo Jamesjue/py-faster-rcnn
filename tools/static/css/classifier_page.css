@@ -1,0 +1,97 @@
+
+#list_classifier {
+    list-style: none;
+    padding-left: 0;
+}
+
+.item_video {
+    padding-bottom: 10px;
+    max-width: 700px;
+}
+
+#classifier_container {
+    padding-bottom: 100px;
+}
+
+.item_classifier {
+    padding-left: 30px;
+}
+
+h4 {
+    font-weight: bold;
+}
+
+h5 {
+    font-weight: bold;
+}
+
+#classifier_name {
+    width: 200px;
+}
+
+#video-select {
+    width: 300px;
+    margin-top: 40px;
+}
+
+#label-select {
+    width: 400px;
+    margin-top: 40px;
+}
+
+#classifier-type-select {
+    width: 200px;
+    margin-top: 10px;
+}
+
+#holder_create_classifier {
+    border: 1px solid #cecece;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.list_no_style {
+    list-style: none;
+    padding-left: 0;
+}
+
+.time_remains {
+    width: 100px !important;
+}
+
+.item_test_classifier_long {
+    border: 1px solid #cecece;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.item_test_classifier_short {
+    border: 1px solid #cecece;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.th-status{
+    min-width:300px;
+    font-size: 12px;
+}
+
+.th-detection{
+    width:300px;
+    font-size: 12px;
+}
+
+.img_evaluation{
+    width: 200px;
+    cursor: pointer;
+}
+
+.list_evaluation{
+    list-style: none;
+    padding-left: 0;
+}
+
+.item_evaluation_video{
+    padding-left: 10px;
+}
