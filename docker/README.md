@@ -1,3 +1,7 @@
+# Set-up
+
+To build TPOD base container image, you need to download the VGG_CNN_M_1024.v2.caffemodel first and put into models directory in this dir.
+
 # To Detect object using the model
 
 hardware requirement: GPU
