@@ -30,12 +30,11 @@ import argparse
 import sys
 
 CLASSES = ('__background__',
-           'object')
-#           'aeroplane', 'bicycle', 'bird', 'boat',
-#           'bottle', 'bus', 'car', 'cat', 'chair',
-#           'cow', 'diningtable', 'dog', 'horse',
-#           'motorbike', 'person', 'pottedplant',
-#           'sheep', 'sofa', 'train', 'tvmonitor')
+          'aeroplane', 'bicycle', 'bird', 'boat',
+          'bottle', 'bus', 'car', 'cat', 'chair',
+          'cow', 'diningtable', 'dog', 'horse',
+          'motorbike', 'person', 'pottedplant',
+          'sheep', 'sofa', 'train', 'tvmonitor')
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -46,27 +45,26 @@ NETS = {'vgg16': ('VGG16',
 def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
+    if len(inds) == 0:
+        return
+
     im = im[:, :, (2, 1, 0)]
     fig, ax = plt.subplots(figsize=(12, 12))
     ax.imshow(im, aspect='equal')
-    
-    if len(inds) == 0:
-        print 'nothing detected'
-    else:
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-            print 'detected roi:{} score:{}'.format(bbox, score)
-            ax.add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                              bbox[2] - bbox[0],
-                              bbox[3] - bbox[1], fill=False,
-                              edgecolor='red', linewidth=3.5)
-                )
-            ax.text(bbox[0], bbox[1] - 2,
-                    '{:s} {:.3f}'.format(class_name, score),
-                    bbox=dict(facecolor='blue', alpha=0.5),
-                    fontsize=14, color='white')
+    for i in inds:
+        bbox = dets[i, :4]
+        score = dets[i, -1]
+        print 'detected {} at {} with confidence {}'.format(class_name, bbox, score)
+        ax.add_patch(
+            plt.Rectangle((bbox[0], bbox[1]),
+                          bbox[2] - bbox[0],
+                          bbox[3] - bbox[1], fill=False,
+                          edgecolor='red', linewidth=3.5)
+            )
+        ax.text(bbox[0], bbox[1] - 2,
+                '{:s} {:.3f}'.format(class_name, score),
+                bbox=dict(facecolor='blue', alpha=0.5),
+                fontsize=14, color='white')
 
     ax.set_title(('{} detections with '
                   'p({} | box) >= {:.1f}').format(class_name, class_name,
@@ -103,7 +101,6 @@ def demo(net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        print dets
         if 'matplotlib' in sys.modules:
             vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
@@ -148,9 +145,9 @@ if __name__ == '__main__':
     print '\n\nLoaded network {:s}'.format(caffemodel)
 
     # Warmup on a dummy image
-    im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-    for i in xrange(2):
-        _, _= im_detect(net, im)
+    # im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
+    # for i in xrange(2):
+    #     _, _= im_detect(net, im)
 
     demo(net, args.im)
     #im_names = args.im#['000456.jpg', '000542.jpg', '001150.jpg',
